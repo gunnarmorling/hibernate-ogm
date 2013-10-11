@@ -130,6 +130,13 @@ public class SimpleQueriesTest extends OgmTestCase {
 
 	@Test
 	@SkipByGridDialect(value = GridDialectType.MONGODB, comment = "Projecting complete entity is not yet implemented.")
+	public void testSelectingCompleteEntity() throws Exception {
+		List<?> results = session.createQuery( "from Hypothesis h where h.id = 16" ).list();
+		assertThat( results ).onProperty( "id" ).containsOnly( "16" );
+	}
+
+	@Test
+	@SkipByGridDialect(value = GridDialectType.MONGODB, comment = "Projecting complete entity is not yet implemented.")
 	public void testSelectingCompleteEntityInProjectionQuery() throws Exception {
 		List<?> projectionResult = session.createQuery( "select h, h.id from Hypothesis h where h.id = 16" ).list();
 		assertThat( projectionResult ).hasSize( 1 );
