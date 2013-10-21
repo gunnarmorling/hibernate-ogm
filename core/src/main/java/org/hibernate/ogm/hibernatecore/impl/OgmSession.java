@@ -67,7 +67,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
-import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.CustomQuery;
@@ -323,12 +322,12 @@ public class OgmSession implements org.hibernate.Session, EventSource {
 	}
 
 	@Override
-	public ScrollableResults scroll(CriteriaImpl criteria, ScrollMode scrollMode) {
+	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode) {
 		return delegate.scroll( criteria, scrollMode );
 	}
 
 	@Override
-	public List list(CriteriaImpl criteria) {
+	public List list(Criteria criteria) {
 		return delegate.list( criteria );
 	}
 
