@@ -22,13 +22,12 @@ package org.hibernate.ogm.transaction.impl;
 
 import java.util.Map;
 
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
+import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.ogm.service.impl.OptionalServiceInitiator;
-import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -51,18 +50,11 @@ public class OgmJtaPlatformInitiator extends OptionalServiceInitiator<JtaPlatfor
 	}
 
 	@Override
-	protected BasicServiceInitiator<JtaPlatform> backupInitiator() {
+	protected StandardServiceInitiator<JtaPlatform> backupInitiator() {
 		return JtaPlatformInitiator.INSTANCE;
 	}
 
 	private boolean hasExplicitPlatform(Map configVales) {
-		Object platform = configVales.get( AvailableSettings.JTA_PLATFORM );
-		if ( platform == null ) {
-			final String transactionManagerLookupImplName = (String) configVales.get( Environment.TRANSACTION_MANAGER_STRATEGY );
-			return transactionManagerLookupImplName != null;
-		}
-		else {
-			return true;
-		}
+		return configVales.containsKey( AvailableSettings.JTA_PLATFORM );
 	}
 }

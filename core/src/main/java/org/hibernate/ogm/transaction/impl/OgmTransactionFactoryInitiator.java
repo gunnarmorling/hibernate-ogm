@@ -22,6 +22,7 @@ package org.hibernate.ogm.transaction.impl;
 
 import java.util.Map;
 
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.internal.TransactionFactoryInitiator;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
@@ -29,7 +30,6 @@ import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.ogm.service.impl.OptionalServiceInitiator;
 import org.hibernate.ogm.util.impl.Log;
 import org.hibernate.ogm.util.impl.LoggerFactory;
-import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -61,7 +61,7 @@ public class OgmTransactionFactoryInitiator extends OptionalServiceInitiator<Tra
 	}
 
 	@Override
-	protected BasicServiceInitiator<TransactionFactory> backupInitiator() {
+	protected StandardServiceInitiator<TransactionFactory> backupInitiator() {
 		return TransactionFactoryInitiator.INSTANCE;
 	}
 }

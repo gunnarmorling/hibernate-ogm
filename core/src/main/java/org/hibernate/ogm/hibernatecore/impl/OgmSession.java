@@ -60,6 +60,8 @@ import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NonFlushedChanges;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
@@ -78,6 +80,7 @@ import org.hibernate.ogm.service.impl.QueryParserService;
 import org.hibernate.ogm.util.impl.Log;
 import org.hibernate.ogm.util.impl.LoggerFactory;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.type.Type;
 
@@ -177,6 +180,16 @@ public class OgmSession implements org.hibernate.Session, EventSource {
 	}
 
 	@Override
+	public Query createQuery(NamedQueryDefinition namedQueryDefinition) {
+		throw new NotSupportedException( "OGM-15", "named queries are not supported yet" );
+	}
+
+	@Override
+	public SQLQuery createSQLQuery(NamedSQLQueryDefinition namedQueryDefinition) {
+		throw new NotSupportedException( "OGM-15", "named queries are not supported yet" );
+	}
+
+	@Override
 	public Query createFilter(Object collection, String queryString) throws HibernateException {
 		//TODO plug the Lucene engine
 		throw new NotSupportedException( "OGM-24", "filters are not supported yet" );
@@ -207,6 +220,25 @@ public class OgmSession implements org.hibernate.Session, EventSource {
 		return delegate.doReturningWork( work );
 	}
 
+	@Override
+	public ProcedureCall getNamedProcedureCall(String name) {
+		throw new NotSupportedException( "OGM-359", "Stored procedures are not supported yet" );
+	}
+
+	@Override
+	public ProcedureCall createStoredProcedureCall(String procedureName) {
+		throw new NotSupportedException( "OGM-359", "Stored procedures are not supported yet" );
+	}
+
+	@Override
+	public ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
+		throw new NotSupportedException( "OGM-359", "Stored procedures are not supported yet" );
+	}
+
+	@Override
+	public ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
+		throw new NotSupportedException( "OGM-359", "Stored procedures are not supported yet" );
+	}
 
 	//Event Source methods
 	@Override

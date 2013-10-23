@@ -32,6 +32,7 @@ import javax.naming.StringRefAddr;
 
 import org.hibernate.Cache;
 import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -48,6 +49,7 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
@@ -61,13 +63,13 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.NamedQueryRepository;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.ogm.exception.NotSupportedException;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -187,6 +189,21 @@ public class OgmSessionFactory implements SessionFactoryImplementor {
 	@Override
 	public NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
 		return delegate.getNamedSQLQuery( queryName );
+	}
+
+	@Override
+	public NamedQueryRepository getNamedQueryRepository() {
+		return delegate.getNamedQueryRepository();
+	}
+
+	@Override
+	public void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
+		delegate.registerNamedQueryDefinition( name, definition );
+	}
+
+	@Override
+	public void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
+		delegate.registerNamedSQLQueryDefinition( name, definition );
 	}
 
 	@Override
@@ -446,5 +463,10 @@ public class OgmSessionFactory implements SessionFactoryImplementor {
 				OgmSessionFactoryObjectFactory.class.getName(),
 				null
 				);
+	}
+
+	@Override
+	public Iterable<EntityNameResolver> iterateEntityNameResolvers() {
+		return delegate.iterateEntityNameResolvers();
 	}
 }

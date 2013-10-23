@@ -240,11 +240,9 @@ public abstract class OgmEntityPersister extends AbstractEntityPersister impleme
 		}
 	}
 
-	//FIXME finish implement postInstantiate
-	public void postInstantiate() {
-		createLoaders();
-		//createUniqueKeyLoaders();
-		createQueryLoader();
+	@Override
+	protected void createUniqueKeyLoaders() throws MappingException {
+		//disabling
 	}
 
 	public GridType getGridIdentifierType() {
@@ -954,6 +952,7 @@ public abstract class OgmEntityPersister extends AbstractEntityPersister impleme
 		return true;
 	}
 
+	@Override
 	public void delete(Serializable id, Object version, Object object, SessionImplementor session)
 			throws HibernateException {
 		final int span = getTableSpan();
