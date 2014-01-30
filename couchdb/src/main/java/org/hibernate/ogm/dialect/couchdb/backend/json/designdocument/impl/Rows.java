@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * JBoss, Home of Professional Open Source
- * Copyright 2013-2014 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2013 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -18,31 +18,51 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.dialect.couchdb.util;
+package org.hibernate.ogm.dialect.couchdb.backend.json.designdocument.impl;
 
-import static org.fest.assertions.Assertions.assertThat;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
-import org.hibernate.ogm.dialect.couchdb.util.impl.DatabaseIdentifier;
-import org.junit.Test;
+import java.util.List;
 
 /**
+ * Represents the Result of the REST call associated with the {@link AssociationsDesignDocument} and
+ * {@link EntitiesDesignDocument}
+ *
  * @author Andrea Boriero <dreborier@gmail.com/>
  */
-public class DatabaseIdentifierTest {
+public class Rows {
 
-	@Test
-	public void shouldReturnTheCorrectServerUri() throws Exception {
-		String expectedServerUri = "http://localhost:5984";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, "databasename", "", "" );
+	private List<Row> rows;
 
-		assertThat( databaseIdentifier.getServerUri().toString() ).isEqualTo( expectedServerUri );
+	List<Row> getRows() {
+		return rows;
 	}
 
-	@Test
-	public void shouldReturnTheCorrectDatabaseName() throws Exception {
-		String expectedName = "not_important";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, expectedName, "", "" );
+	void setRows(List<Row> rows) {
+		this.rows = rows;
+	}
 
-		assertThat( databaseIdentifier.getDatabaseName() ).isEqualTo( expectedName );
+	@JsonIgnore
+	public int size() {
+		if ( rows.size() == 0 ) {
+			return 0;
+		}
+		else {
+			return rows.get( 0 ).getValue();
+		}
+	}
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	private static class Row {
+		private int value;
+
+		public int getValue() {
+			return value;
+		}
+
+		public void setValue(int value) {
+			this.value = value;
+		}
 	}
 }

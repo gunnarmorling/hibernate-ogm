@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * JBoss, Home of Professional Open Source
- * Copyright 2013-2014 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2013 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -18,31 +18,44 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.dialect.couchdb.util;
+package org.hibernate.ogm.dialect.couchdb.backend.json.impl;
 
-import static org.fest.assertions.Assertions.assertThat;
-
-import org.hibernate.ogm.dialect.couchdb.util.impl.DatabaseIdentifier;
-import org.junit.Test;
+import org.codehaus.jackson.annotate.JsonTypeName;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 /**
+ * Used to serialize and deserialize sequence objects.
+ *
  * @author Andrea Boriero <dreborier@gmail.com/>
  */
-public class DatabaseIdentifierTest {
+@JsonSerialize(include = Inclusion.NON_NULL)
+@JsonTypeName(SequenceDocument.TYPE_NAME)
+public class SequenceDocument extends Document {
 
-	@Test
-	public void shouldReturnTheCorrectServerUri() throws Exception {
-		String expectedServerUri = "http://localhost:5984";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, "databasename", "", "" );
+	/**
+	 * The name of this document type as materialized in {@link Document#TYPE_DISCRIMINATOR_FIELD_NAME}.
+	 */
+	public static final String TYPE_NAME = "sequence";
 
-		assertThat( databaseIdentifier.getServerUri().toString() ).isEqualTo( expectedServerUri );
+	private long value;
+
+	public SequenceDocument() {
 	}
 
-	@Test
-	public void shouldReturnTheCorrectDatabaseName() throws Exception {
-		String expectedName = "not_important";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, expectedName, "", "" );
+	public SequenceDocument(int initialValue) {
+		value = initialValue;
+	}
 
-		assertThat( databaseIdentifier.getDatabaseName() ).isEqualTo( expectedName );
+	public long getValue() {
+		return value;
+	}
+
+	public void setValue(long value) {
+		this.value = value;
+	}
+
+	public void increase(int increment) {
+		value += increment;
 	}
 }
