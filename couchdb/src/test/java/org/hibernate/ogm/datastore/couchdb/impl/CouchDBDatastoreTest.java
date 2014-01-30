@@ -31,10 +31,11 @@ import javax.persistence.OptimisticLockException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.ogm.cfg.OgmProperties;
+import org.hibernate.ogm.couchdb.impl.datastore.CouchDBDatastore;
+import org.hibernate.ogm.couchdb.impl.dialect.backend.json.Document;
+import org.hibernate.ogm.couchdb.impl.dialect.backend.json.EntityDocument;
+import org.hibernate.ogm.couchdb.impl.dialect.util.DatabaseIdentifier;
 import org.hibernate.ogm.dialect.couchdb.CouchDBDialectTest;
-import org.hibernate.ogm.dialect.couchdb.impl.backend.json.Document;
-import org.hibernate.ogm.dialect.couchdb.impl.backend.json.EntityDocument;
-import org.hibernate.ogm.dialect.couchdb.impl.util.DatabaseIdentifier;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.EntityKeyMetadata;
 import org.junit.After;

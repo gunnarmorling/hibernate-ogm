@@ -30,13 +30,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.ogm.datastore.couchdb.impl.CouchDBDatastoreProvider;
+import org.hibernate.ogm.couchdb.impl.datastore.CouchDBDatastoreProvider;
+import org.hibernate.ogm.couchdb.impl.dialect.CouchDBDialect;
+import org.hibernate.ogm.couchdb.impl.dialect.model.CouchDBTupleSnapshot;
 import org.hibernate.ogm.datastore.impl.PropertyOptionsContext;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
-import org.hibernate.ogm.dialect.couchdb.impl.model.CouchDBTupleSnapshot;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.AssociationKeyMetadata;
 import org.hibernate.ogm.grid.EntityKey;

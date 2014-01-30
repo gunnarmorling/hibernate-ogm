@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * JBoss, Home of Professional Open Source
- * Copyright 2013-2014 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2013 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -18,31 +18,34 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.dialect.couchdb.util;
+package org.hibernate.ogm.couchdb.impl.dialect.type;
 
-import static org.fest.assertions.Assertions.assertThat;
-
-import org.hibernate.ogm.couchdb.impl.dialect.util.DatabaseIdentifier;
-import org.junit.Test;
+import org.hibernate.MappingException;
+import org.hibernate.engine.spi.Mapping;
+import org.hibernate.ogm.type.AbstractGenericBasicType;
+import org.hibernate.ogm.type.descriptor.WrappedGridTypeDescriptor;
+import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
 
 /**
+ * Type for storing {@code byte}s in CouchDB. They are stored as JSON numbers.
+ *
  * @author Andrea Boriero <dreborier@gmail.com/>
  */
-public class DatabaseIdentifierTest {
+public class CouchDBByteType extends AbstractGenericBasicType<Byte> {
 
-	@Test
-	public void shouldReturnTheCorrectServerUri() throws Exception {
-		String expectedServerUri = "http://localhost:5984";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, "databasename", "", "" );
+	public static final CouchDBByteType INSTANCE = new CouchDBByteType();
 
-		assertThat( databaseIdentifier.getServerUri().toString() ).isEqualTo( expectedServerUri );
+	public CouchDBByteType() {
+		super( WrappedGridTypeDescriptor.INSTANCE, ByteTypeDescriptor.INSTANCE );
 	}
 
-	@Test
-	public void shouldReturnTheCorrectDatabaseName() throws Exception {
-		String expectedName = "not_important";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, expectedName, "", "" );
+	@Override
+	public String getName() {
+		return "couchdb_byte";
+	}
 
-		assertThat( databaseIdentifier.getDatabaseName() ).isEqualTo( expectedName );
+	@Override
+	public int getColumnSpan(Mapping mapping) throws MappingException {
+		return 1;
 	}
 }

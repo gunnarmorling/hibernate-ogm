@@ -18,31 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.dialect.couchdb.util;
+package org.hibernate.ogm.couchdb.impl.options;
 
-import static org.fest.assertions.Assertions.assertThat;
-
-import org.hibernate.ogm.couchdb.impl.dialect.util.DatabaseIdentifier;
-import org.junit.Test;
+import org.hibernate.ogm.couchdb.options.CouchDBEntityContext;
+import org.hibernate.ogm.couchdb.options.CouchDBGlobalContext;
+import org.hibernate.ogm.options.navigation.impl.ConfigurationContext;
+import org.hibernate.ogm.options.navigation.impl.document.DocumentStoreGlobalContextImpl;
 
 /**
- * @author Andrea Boriero <dreborier@gmail.com/>
+ * Converts global CouchDB options.
+ *
+ * @author Gunnar Morling
  */
-public class DatabaseIdentifierTest {
+public abstract class CouchDBGlobalContextImpl extends DocumentStoreGlobalContextImpl<CouchDBGlobalContext, CouchDBEntityContext> implements
+		CouchDBGlobalContext {
 
-	@Test
-	public void shouldReturnTheCorrectServerUri() throws Exception {
-		String expectedServerUri = "http://localhost:5984";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, "databasename", "", "" );
-
-		assertThat( databaseIdentifier.getServerUri().toString() ).isEqualTo( expectedServerUri );
-	}
-
-	@Test
-	public void shouldReturnTheCorrectDatabaseName() throws Exception {
-		String expectedName = "not_important";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, expectedName, "", "" );
-
-		assertThat( databaseIdentifier.getDatabaseName() ).isEqualTo( expectedName );
+	public CouchDBGlobalContextImpl(ConfigurationContext context) {
+		super( context );
 	}
 }

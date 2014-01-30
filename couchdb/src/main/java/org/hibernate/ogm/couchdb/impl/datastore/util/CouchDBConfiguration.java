@@ -18,31 +18,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.dialect.couchdb.util;
+package org.hibernate.ogm.couchdb.impl.datastore.util;
 
-import static org.fest.assertions.Assertions.assertThat;
+import java.util.Map;
 
-import org.hibernate.ogm.couchdb.impl.dialect.util.DatabaseIdentifier;
-import org.junit.Test;
+import org.hibernate.ogm.cfg.impl.DocumentStoreConfiguration;
 
 /**
- * @author Andrea Boriero <dreborier@gmail.com/>
+ * Provides utility methods to access the CouchDB configuration value
+ *
+ * @author Andrea Boriero <dreborier@gmail.com>
+ * @author Gunnar Morling
  */
-public class DatabaseIdentifierTest {
+public class CouchDBConfiguration extends DocumentStoreConfiguration {
 
-	@Test
-	public void shouldReturnTheCorrectServerUri() throws Exception {
-		String expectedServerUri = "http://localhost:5984";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, "databasename", "", "" );
+	public static final int DEFAULT_PORT = 5984;
 
-		assertThat( databaseIdentifier.getServerUri().toString() ).isEqualTo( expectedServerUri );
-	}
-
-	@Test
-	public void shouldReturnTheCorrectDatabaseName() throws Exception {
-		String expectedName = "not_important";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, expectedName, "", "" );
-
-		assertThat( databaseIdentifier.getDatabaseName() ).isEqualTo( expectedName );
+	public CouchDBConfiguration(Map<?, ?> configurationValues) {
+		super( configurationValues, DEFAULT_PORT );
 	}
 }

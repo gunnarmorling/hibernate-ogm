@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * JBoss, Home of Professional Open Source
- * Copyright 2013-2014 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2013 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -18,31 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.dialect.couchdb.util;
+package org.hibernate.ogm.couchdb.impl.logging;
 
-import static org.fest.assertions.Assertions.assertThat;
-
-import org.hibernate.ogm.couchdb.impl.dialect.util.DatabaseIdentifier;
-import org.junit.Test;
+import org.jboss.logging.Logger;
 
 /**
  * @author Andrea Boriero <dreborier@gmail.com/>
  */
-public class DatabaseIdentifierTest {
+public class LoggerFactory {
 
-	@Test
-	public void shouldReturnTheCorrectServerUri() throws Exception {
-		String expectedServerUri = "http://localhost:5984";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, "databasename", "", "" );
-
-		assertThat( databaseIdentifier.getServerUri().toString() ).isEqualTo( expectedServerUri );
+	public static Log getLogger() {
+		return Logger.getMessageLogger( Log.class, "CouchDB" );
 	}
 
-	@Test
-	public void shouldReturnTheCorrectDatabaseName() throws Exception {
-		String expectedName = "not_important";
-		DatabaseIdentifier databaseIdentifier = new DatabaseIdentifier( "localhost", 5984, expectedName, "", "" );
-
-		assertThat( databaseIdentifier.getDatabaseName() ).isEqualTo( expectedName );
-	}
 }
