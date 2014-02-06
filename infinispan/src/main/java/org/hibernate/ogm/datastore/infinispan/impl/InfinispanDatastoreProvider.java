@@ -69,7 +69,6 @@ public class InfinispanDatastoreProvider implements DatastoreProvider, Startable
 	private JndiService jndiService;
 	private Map<String,Cache> caches;
 	private boolean isCacheProvided;
-	private boolean started = false;
 	private EmbeddedCacheManager cacheManager;
 	private final InfinispanConfiguration config = new InfinispanConfiguration();
 
@@ -85,11 +84,6 @@ public class InfinispanDatastoreProvider implements DatastoreProvider, Startable
 
 	@Override
 	public void start() {
-		if ( started ) {
-			// ServiceRegistry might invoke start multiple times, but always from the same initialization thread.
-			//TODO remove the start flag: no longer needed after HHH-7147
-			return;
-		}
 		try {
 			String jndiProperty = config.getJndiName();
 			if ( jndiProperty == null ) {
@@ -109,7 +103,6 @@ public class InfinispanDatastoreProvider implements DatastoreProvider, Startable
 		//clear resources
 		this.jtaPlatform = null;
 		this.jndiService = null;
-		this.started = true;
 	}
 
 	/**
