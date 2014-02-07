@@ -37,8 +37,10 @@ import net.sf.ehcache.transaction.xa.EhcacheXAResource;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.ogm.datastore.ehcache.impl.configuration.EhcacheConfiguration;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
+import org.hibernate.ogm.datastore.spi.DefaultDatastoreNames;
 import org.hibernate.ogm.dialect.GridDialect;
 import org.hibernate.ogm.dialect.ehcache.EhcacheDialect;
+import org.hibernate.ogm.dialect.ehcache.impl.SerializableKey;
 import org.hibernate.ogm.service.impl.LuceneBasedQueryParserService;
 import org.hibernate.ogm.service.impl.QueryParserService;
 import org.hibernate.service.spi.Configurable;
@@ -60,6 +62,10 @@ public class EhcacheDatastoreProvider implements DatastoreProvider, Startable, S
 
 	private JtaPlatform jtaPlatform;
 	private CacheManager cacheManager;
+	private Cache<SerializableKey> entityCache;
+	private Cache<SerializableKey> associationCache;
+	private Cache<SerializableKey> identifierCache;
+
 	private final EhcacheConfiguration config = new EhcacheConfiguration();
 
 	@Override
@@ -105,6 +111,10 @@ public class EhcacheDatastoreProvider implements DatastoreProvider, Startable, S
 			configuration.addTransactionManagerLookup( transactionManagerLookupParameter );
 		}
 		cacheManager = CacheManager.create( url );
+
+		entityCache = new Cache<SerializableKey>( cacheManager.getCache( DefaultDatastoreNames.ENTITY_STORE ) );
+		associationCache = new Cache<SerializableKey>( cacheManager.getCache( DefaultDatastoreNames.ASSOCIATION_STORE ) );
+		identifierCache = new Cache<SerializableKey>( cacheManager.getCache( DefaultDatastoreNames.IDENTIFIER_STORE ) );
 	}
 
 	@Override
@@ -112,9 +122,16 @@ public class EhcacheDatastoreProvider implements DatastoreProvider, Startable, S
 		cacheManager.shutdown();
 	}
 
-	public CacheManager getCacheManager() {
-		// Might what to use a getCache(String): Cache here instead
-		return cacheManager;
+	public Cache<SerializableKey> getEntityCache() {
+		return entityCache;
+	}
+
+	public Cache<SerializableKey> getAssociationCache() {
+		return associationCache;
+	}
+
+	public Cache<SerializableKey> getIdentifierCache() {
+		return identifierCache;
 	}
 
 	public static class OgmTransactionManagerLookupDelegate implements TransactionManagerLookup {

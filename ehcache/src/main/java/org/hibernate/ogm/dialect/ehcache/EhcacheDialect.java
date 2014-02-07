@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
 
 import org.hibernate.LockMode;
@@ -35,13 +34,13 @@ import org.hibernate.dialect.lock.OptimisticLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.ogm.datastore.ehcache.impl.Cache;
 import org.hibernate.ogm.datastore.ehcache.impl.EhcacheDatastoreProvider;
 import org.hibernate.ogm.datastore.impl.MapHelpers;
 import org.hibernate.ogm.datastore.impl.MapTupleSnapshot;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
 import org.hibernate.ogm.datastore.spi.AssociationOperation;
-import org.hibernate.ogm.datastore.spi.DefaultDatastoreNames;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
 import org.hibernate.ogm.dialect.GridDialect;
@@ -90,7 +89,7 @@ public class EhcacheDialect implements GridDialect {
 
 	@Override
 	public Tuple getTuple(EntityKey key, TupleContext tupleContext) {
-		final Cache entityCache = getEntityCache();
+		final Cache<SerializableKey> entityCache = datastoreProvider.getEntityCache();
 		final Element element = entityCache.get( new SerializableKey( key ) );
 		if ( element != null ) {
 			return createTuple( element );
@@ -107,7 +106,7 @@ public class EhcacheDialect implements GridDialect {
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		final Cache entityCache = getEntityCache();
+		final Cache<SerializableKey> entityCache = datastoreProvider.getEntityCache();
 		final HashMap<String, Object> tuple = new HashMap<String, Object>();
 		entityCache.put( new Element( new SerializableKey( key ), tuple ) );
 		return new Tuple( new MapTupleSnapshot( tuple ) );
@@ -121,12 +120,12 @@ public class EhcacheDialect implements GridDialect {
 
 	@Override
 	public void removeTuple(EntityKey key) {
-		getEntityCache().remove( new SerializableKey( key ) );
+		datastoreProvider.getEntityCache().remove( new SerializableKey( key ) );
 	}
 
 	@Override
 	public Association getAssociation(AssociationKey key, AssociationContext associationContext) {
-		final Cache associationCache = getAssociationCache();
+		final Cache<SerializableKey> associationCache = datastoreProvider.getAssociationCache();
 		final Element element = associationCache.get( new SerializableKey( key ) );
 		if ( element == null ) {
 			return null;
@@ -138,7 +137,7 @@ public class EhcacheDialect implements GridDialect {
 
 	@Override
 	public Association createAssociation(AssociationKey key, AssociationContext associationContext) {
-		final Cache associationCache = getAssociationCache();
+		final Cache<SerializableKey> associationCache = datastoreProvider.getAssociationCache();
 		Map<SerializableKey, Map<String, Object>> association = new HashMap<SerializableKey, Map<String, Object>>();
 		associationCache.put( new Element( new SerializableKey( key ), association ) );
 		return new Association( new SerializableMapAssociationSnapshot( association ) );
@@ -165,7 +164,7 @@ public class EhcacheDialect implements GridDialect {
 
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
-		getAssociationCache().remove( new SerializableKey( key ) );
+		datastoreProvider.getAssociationCache().remove( new SerializableKey( key ) );
 	}
 
 	@Override
@@ -177,7 +176,7 @@ public class EhcacheDialect implements GridDialect {
 	public void nextValue(RowKey rowKey, IntegralDataTypeHolder value, int increment, int initialValue) {
 		SerializableKey key = new SerializableKey( rowKey );
 
-		final Cache cache = getIdentifierCache();
+		final Cache<SerializableKey> cache = datastoreProvider.getIdentifierCache();
 		Element previousValue = cache.get( key );
 		if ( previousValue == null ) {
 			previousValue = cache.putIfAbsent( new Element( key, initialValue ) );
@@ -199,22 +198,9 @@ public class EhcacheDialect implements GridDialect {
 		return null;
 	}
 
-	private Cache getIdentifierCache() {
-		return datastoreProvider.getCacheManager().getCache( DefaultDatastoreNames.IDENTIFIER_STORE );
-	}
-
-	private Cache getEntityCache() {
-		return datastoreProvider.getCacheManager().getCache( DefaultDatastoreNames.ENTITY_STORE );
-	}
-
-	private Cache getAssociationCache() {
-		return datastoreProvider.getCacheManager().getCache( DefaultDatastoreNames.ASSOCIATION_STORE );
-	}
-
 	@Override
 	public void forEachTuple(Consumer consumer, EntityKeyMetadata... entityKeyMetadatas) {
-		Cache entityCache = getEntityCache();
-		@SuppressWarnings("unchecked")
+		Cache<SerializableKey> entityCache = datastoreProvider.getEntityCache();
 		List<SerializableKey> keys = entityCache.getKeys();
 		for ( SerializableKey key : keys ) {
 			for ( EntityKeyMetadata entityKeyMetadata : entityKeyMetadatas ) {
