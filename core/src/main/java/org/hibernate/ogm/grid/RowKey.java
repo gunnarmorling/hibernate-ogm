@@ -20,7 +20,6 @@
  */
 package org.hibernate.ogm.grid;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -28,7 +27,7 @@ import java.util.Arrays;
  *
  * @author Emmanuel Bernard
  */
-public final class RowKey implements Serializable, Key {
+public final class RowKey implements Key {
 
 	private final String table;
 	private final String[] columnNames;
