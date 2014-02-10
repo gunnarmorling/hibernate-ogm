@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * JBoss, Home of Professional Open Source
- * Copyright 2010-2012 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2010-2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -38,13 +38,15 @@ import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.ogm.datastore.ehcache.impl.EhcacheDatastoreProvider;
 import org.hibernate.ogm.datastore.impl.MapHelpers;
 import org.hibernate.ogm.datastore.impl.MapTupleSnapshot;
-import org.hibernate.ogm.datastore.map.impl.MapAssociationSnapshot;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
+import org.hibernate.ogm.datastore.spi.AssociationOperation;
 import org.hibernate.ogm.datastore.spi.DefaultDatastoreNames;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
 import org.hibernate.ogm.dialect.GridDialect;
+import org.hibernate.ogm.dialect.ehcache.impl.SerializableKey;
+import org.hibernate.ogm.dialect.ehcache.impl.SerializableMapAssociationSnapshot;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.EntityKeyMetadata;
@@ -89,7 +91,7 @@ public class EhcacheDialect implements GridDialect {
 	@Override
 	public Tuple getTuple(EntityKey key, TupleContext tupleContext) {
 		final Cache entityCache = getEntityCache();
-		final Element element = entityCache.get( key );
+		final Element element = entityCache.get( new SerializableKey( key ) );
 		if ( element != null ) {
 			return createTuple( element );
 		}
@@ -107,7 +109,7 @@ public class EhcacheDialect implements GridDialect {
 	public Tuple createTuple(EntityKey key) {
 		final Cache entityCache = getEntityCache();
 		final HashMap<String, Object> tuple = new HashMap<String, Object>();
-		entityCache.put( new Element( key, tuple ) );
+		entityCache.put( new Element( new SerializableKey( key ), tuple ) );
 		return new Tuple( new MapTupleSnapshot( tuple ) );
 	}
 
@@ -119,37 +121,51 @@ public class EhcacheDialect implements GridDialect {
 
 	@Override
 	public void removeTuple(EntityKey key) {
-		getEntityCache().remove( key );
+		getEntityCache().remove( new SerializableKey( key ) );
 	}
 
 	@Override
 	public Association getAssociation(AssociationKey key, AssociationContext associationContext) {
 		final Cache associationCache = getAssociationCache();
-		final Element element = associationCache.get( key );
+		final Element element = associationCache.get( new SerializableKey( key ) );
 		if ( element == null ) {
 			return null;
 		}
 		else {
-			return new Association( new MapAssociationSnapshot( (Map) element.getValue() ) );
+			return new Association( new SerializableMapAssociationSnapshot( (Map<SerializableKey, Map<String, Object>>) element.getValue() ) );
 		}
 	}
 
 	@Override
 	public Association createAssociation(AssociationKey key, AssociationContext associationContext) {
 		final Cache associationCache = getAssociationCache();
-		Map<RowKey, Map<String, Object>> association = new HashMap<RowKey, Map<String, Object>>();
-		associationCache.put( new Element( key, association ) );
-		return new Association( new MapAssociationSnapshot( association ) );
+		Map<SerializableKey, Map<String, Object>> association = new HashMap<SerializableKey, Map<String, Object>>();
+		associationCache.put( new Element( new SerializableKey( key ), association ) );
+		return new Association( new SerializableMapAssociationSnapshot( association ) );
 	}
 
 	@Override
 	public void updateAssociation(Association association, AssociationKey key, AssociationContext associationContext) {
-		MapHelpers.updateAssociation( association, key );
+		Map<SerializableKey, Map<String, Object>> map = ( (SerializableMapAssociationSnapshot) association.getSnapshot() ).getUnderlyingMap();
+
+		for ( AssociationOperation action : association.getOperations() ) {
+			switch ( action.getType() ) {
+				case CLEAR:
+					map.clear();
+				case PUT_NULL:
+				case PUT:
+					map.put( new SerializableKey( action.getKey() ), MapHelpers.tupleToMap( action.getValue() ) );
+					break;
+				case REMOVE:
+					map.remove( new SerializableKey( action.getKey() ) );
+					break;
+			}
+		}
 	}
 
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
-		getAssociationCache().remove( key );
+		getAssociationCache().remove( new SerializableKey( key ) );
 	}
 
 	@Override
@@ -158,7 +174,9 @@ public class EhcacheDialect implements GridDialect {
 	}
 
 	@Override
-	public void nextValue(RowKey key, IntegralDataTypeHolder value, int increment, int initialValue) {
+	public void nextValue(RowKey rowKey, IntegralDataTypeHolder value, int increment, int initialValue) {
+		SerializableKey key = new SerializableKey( rowKey );
+
 		final Cache cache = getIdentifierCache();
 		Element previousValue = cache.get( key );
 		if ( previousValue == null ) {
@@ -197,8 +215,8 @@ public class EhcacheDialect implements GridDialect {
 	public void forEachTuple(Consumer consumer, EntityKeyMetadata... entityKeyMetadatas) {
 		Cache entityCache = getEntityCache();
 		@SuppressWarnings("unchecked")
-		List<EntityKey> keys = entityCache.getKeys();
-		for ( EntityKey key : keys ) {
+		List<SerializableKey> keys = entityCache.getKeys();
+		for ( SerializableKey key : keys ) {
 			for ( EntityKeyMetadata entityKeyMetadata : entityKeyMetadatas ) {
 				// Check if there is a way to load keys applying a filter
 				if ( key.getTable().equals( entityKeyMetadata.getTable() ) ) {

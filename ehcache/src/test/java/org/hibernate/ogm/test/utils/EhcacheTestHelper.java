@@ -33,6 +33,7 @@ import org.hibernate.ogm.cfg.OgmConfiguration;
 import org.hibernate.ogm.datastore.ehcache.Ehcache;
 import org.hibernate.ogm.datastore.ehcache.impl.EhcacheDatastoreProvider;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
+import org.hibernate.ogm.dialect.ehcache.impl.SerializableKey;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.options.generic.document.AssociationStorageType;
 import org.hibernate.ogm.options.navigation.context.GlobalContext;
@@ -54,7 +55,7 @@ public class EhcacheTestHelper implements TestableGridDialect {
 
 	@Override
 	public Map<String,Object> extractEntityTuple(SessionFactory sessionFactory, EntityKey key) {
-		return (Map) getEntityCache( sessionFactory ).get( key ).getValue();
+		return (Map) getEntityCache( sessionFactory ).get( new SerializableKey( key ) ).getValue();
 	}
 
 	private static Cache getEntityCache(SessionFactory sessionFactory) {
