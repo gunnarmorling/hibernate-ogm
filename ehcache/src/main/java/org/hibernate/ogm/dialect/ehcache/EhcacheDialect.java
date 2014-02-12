@@ -189,6 +189,7 @@ public class EhcacheDialect implements GridDialect {
 		SerializableKey key = new SerializableKey( rowKey );
 
 		final Cache<SerializableKey> cache = datastoreProvider.getIdentifierCache();
+
 		Element previousValue = cache.get( key );
 		if ( previousValue == null ) {
 			previousValue = cache.putIfAbsent( new Element( key, initialValue ) );
@@ -203,6 +204,11 @@ public class EhcacheDialect implements GridDialect {
 		else {
 			value.initialize( initialValue );
 		}
+	}
+
+	@Override
+	public boolean isStoredInEntityStructure(AssociationKey associationKey, AssociationContext associationContext) {
+		return false;
 	}
 
 	@Override
