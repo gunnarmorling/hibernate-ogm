@@ -24,9 +24,8 @@ import java.util.HashMap;
 
 import org.junit.Before;
 import org.junit.Test;
-
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.ogm.datastore.ehcache.impl.EhcacheDatastoreProvider;
+import org.hibernate.ogm.dialect.ehcache.datastore.impl.EhcacheDatastoreProvider;
 import org.hibernate.ogm.grid.RowKey;
 
 import static org.hamcrest.CoreMatchers.equalTo;

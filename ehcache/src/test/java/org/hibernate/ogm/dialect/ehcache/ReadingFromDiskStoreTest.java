@@ -27,7 +27,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.ogm.datastore.ehcache.EhcacheProperties;
 import org.hibernate.ogm.test.utils.TestForIssue;
 import org.hibernate.ogm.test.utils.jpa.GetterPersistenceUnitInfo;
 import org.hibernate.ogm.test.utils.jpa.JpaTestCase;

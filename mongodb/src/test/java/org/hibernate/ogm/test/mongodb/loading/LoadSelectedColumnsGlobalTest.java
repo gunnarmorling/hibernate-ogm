@@ -22,8 +22,8 @@ package org.hibernate.ogm.test.mongodb.loading;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.ogm.cfg.DocumentStoreProperties;
-import org.hibernate.ogm.datastore.mongodb.impl.MongoDBDatastoreProvider;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
+import org.hibernate.ogm.dialect.mongodb.datastore.impl.MongoDBDatastoreProvider;
 import org.hibernate.ogm.options.generic.document.AssociationStorageType;
 
 import com.mongodb.BasicDBObject;

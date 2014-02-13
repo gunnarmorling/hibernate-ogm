@@ -22,8 +22,8 @@ package org.hibernate.ogm.test.mongodb.associations;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.ogm.cfg.DocumentStoreProperties;
-import org.hibernate.ogm.datastore.mongodb.AssociationDocumentType;
-import org.hibernate.ogm.datastore.mongodb.MongoDBProperties;
+import org.hibernate.ogm.dialect.mongodb.MongoDBProperties;
+import org.hibernate.ogm.dialect.mongodb.options.AssociationDocumentType;
 import org.hibernate.ogm.options.generic.document.AssociationStorageType;
 import org.hibernate.ogm.test.associations.collection.unidirectional.CollectionUnidirectionalTest;
 

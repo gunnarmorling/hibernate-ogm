@@ -25,8 +25,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Set;
 
-import org.hibernate.ogm.datastore.infinispan.impl.InfinispanDatastoreProvider;
 import org.hibernate.ogm.dialect.infinispan.InfinispanDialect;
+import org.hibernate.ogm.dialect.infinispan.datastore.impl.InfinispanDatastoreProvider;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.AssociationKeyMetadata;
 import org.hibernate.ogm.grid.EntityKey;

@@ -31,7 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.ogm.OgmSessionFactory;
 import org.hibernate.ogm.cfg.OgmConfiguration;
-import org.hibernate.ogm.datastore.mongodb.AssociationDocumentType;
+import org.hibernate.ogm.dialect.mongodb.options.AssociationDocumentType;
 import org.hibernate.ogm.options.generic.document.AssociationStorageType;
 import org.hibernate.ogm.test.utils.MongoDBTestHelper;
 import org.hibernate.ogm.test.utils.OgmTestCase;

@@ -24,7 +24,7 @@ import static org.fest.assertions.Assertions.assertThat;
 
 import java.lang.annotation.ElementType;
 
-import org.hibernate.ogm.datastore.mongodb.MongoDB;
+import org.hibernate.ogm.dialect.mongodb.MongoDB;
 import org.hibernate.ogm.options.generic.document.AssociationStorageType;
 import org.hibernate.ogm.options.generic.document.impl.AssociationStorageOption;
 import org.hibernate.ogm.options.navigation.impl.ConfigurationContext;

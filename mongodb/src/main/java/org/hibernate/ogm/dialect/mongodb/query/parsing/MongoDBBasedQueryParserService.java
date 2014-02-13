@@ -28,10 +28,10 @@ import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.QueryParser;
 import org.hibernate.hql.ast.spi.EntityNamesResolver;
+import org.hibernate.ogm.dialect.mongodb.logging.impl.Log;
+import org.hibernate.ogm.dialect.mongodb.logging.impl.LoggerFactory;
 import org.hibernate.ogm.dialect.mongodb.query.MongoDBQueryImpl;
 import org.hibernate.ogm.hibernatecore.impl.OgmSession;
-import org.hibernate.ogm.logging.mongodb.impl.Log;
-import org.hibernate.ogm.logging.mongodb.impl.LoggerFactory;
 import org.hibernate.ogm.service.impl.BaseQueryParserService;
 import org.hibernate.ogm.service.impl.SessionFactoryEntityNamesResolver;
 
