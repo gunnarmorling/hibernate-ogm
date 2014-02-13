@@ -30,7 +30,7 @@ import org.hibernate.ogm.cfg.OgmProperties;
 import org.hibernate.ogm.dialect.BatchableGridDialect;
 import org.hibernate.ogm.dialect.batch.OperationsQueue;
 import org.hibernate.ogm.dialect.mongodb.MongoDBDialect;
-import org.hibernate.ogm.dialect.mongodb.datastore.impl.MongoDBDatastoreProvider;
+import org.hibernate.ogm.dialect.mongodb.impl.datastore.MongoDBDatastoreProvider;
 import org.hibernate.ogm.test.simpleentity.Helicopter;
 import org.hibernate.ogm.test.utils.OgmTestCase;
 import org.junit.After;

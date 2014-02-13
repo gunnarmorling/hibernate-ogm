@@ -60,7 +60,7 @@ public final class Neo4jProperties implements OgmProperties {
 	/**
 	 * Qualified class name for the creation of a new {@link org.neo4j.graphdb.GraphDatabaseService}.
 	 * <p>
-	 * The class must implement the interface {@link org.hibernate.ogm.dialect.neo4j.datastore.spi.GraphDatabaseServiceFactory}.
+	 * The class must implement the interface {@link org.hibernate.ogm.dialect.neo4j.impl.datastore.spi.GraphDatabaseServiceFactory}.
 	 */
 	public static final String NEO4J_GRAPHDB_FACTORYCLASS = "hibernate.ogm.neo4j.graphdb.factoryclass";
 

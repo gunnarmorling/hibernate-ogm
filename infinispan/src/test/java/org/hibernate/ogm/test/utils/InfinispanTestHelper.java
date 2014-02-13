@@ -30,7 +30,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.ogm.cfg.OgmConfiguration;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
 import org.hibernate.ogm.dialect.infinispan.Infinispan;
-import org.hibernate.ogm.dialect.infinispan.datastore.impl.InfinispanDatastoreProvider;
+import org.hibernate.ogm.dialect.infinispan.impl.datastore.InfinispanDatastoreProvider;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.options.generic.document.AssociationStorageType;
 import org.hibernate.ogm.options.navigation.context.GlobalContext;

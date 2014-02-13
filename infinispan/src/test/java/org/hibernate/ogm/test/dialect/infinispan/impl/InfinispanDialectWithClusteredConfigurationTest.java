@@ -35,7 +35,7 @@ import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.dialect.infinispan.InfinispanDialect;
 import org.hibernate.ogm.dialect.infinispan.InfinispanProperties;
-import org.hibernate.ogm.dialect.infinispan.datastore.impl.InfinispanDatastoreProvider;
+import org.hibernate.ogm.dialect.infinispan.impl.datastore.InfinispanDatastoreProvider;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.AssociationKeyMetadata;
 import org.hibernate.ogm.grid.EntityKey;

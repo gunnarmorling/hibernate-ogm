@@ -22,7 +22,7 @@ package org.hibernate.ogm.test.dialect.couchdb.util.impl;
 
 import static org.fest.assertions.Assertions.assertThat;
 
-import org.hibernate.ogm.dialect.couchdb.util.impl.DatabaseIdentifier;
+import org.hibernate.ogm.dialect.couchdb.impl.util.DatabaseIdentifier;
 import org.junit.Test;
 
 /**

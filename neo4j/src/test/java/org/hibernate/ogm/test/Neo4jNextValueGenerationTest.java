@@ -34,7 +34,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.ogm.dialect.neo4j.Neo4jDialect;
 import org.hibernate.ogm.dialect.neo4j.Neo4jProperties;
-import org.hibernate.ogm.dialect.neo4j.datastore.impl.Neo4jDatastoreProvider;
+import org.hibernate.ogm.dialect.neo4j.impl.datastore.Neo4jDatastoreProvider;
 import org.hibernate.ogm.grid.RowKey;
 import org.hibernate.ogm.test.utils.Neo4jTestHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;

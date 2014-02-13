@@ -22,10 +22,10 @@ package org.hibernate.ogm.test.utils.backend.json.designdocument;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-import org.hibernate.ogm.dialect.couchdb.backend.json.designdocument.impl.DesignDocument;
-import org.hibernate.ogm.dialect.couchdb.backend.json.impl.AssociationDocument;
-import org.hibernate.ogm.dialect.couchdb.backend.json.impl.Document;
-import org.hibernate.ogm.dialect.couchdb.backend.json.impl.EntityDocument;
+import org.hibernate.ogm.dialect.couchdb.impl.backend.json.AssociationDocument;
+import org.hibernate.ogm.dialect.couchdb.impl.backend.json.Document;
+import org.hibernate.ogm.dialect.couchdb.impl.backend.json.EntityDocument;
+import org.hibernate.ogm.dialect.couchdb.impl.backend.json.designdocument.DesignDocument;
 
 /**
  * Creates a CouchDB Design Document with a view and list used to retrieve the number of associations stored in the

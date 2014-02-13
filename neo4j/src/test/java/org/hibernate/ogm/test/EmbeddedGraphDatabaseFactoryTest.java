@@ -26,7 +26,7 @@ import java.util.Properties;
 
 import org.fest.util.Files;
 import org.hibernate.ogm.dialect.neo4j.Neo4jProperties;
-import org.hibernate.ogm.dialect.neo4j.datastore.impl.EmbeddedGraphDatabaseFactory;
+import org.hibernate.ogm.dialect.neo4j.impl.datastore.EmbeddedGraphDatabaseFactory;
 import org.hibernate.ogm.test.utils.Neo4jTestHelper;
 import org.junit.After;
 import org.junit.Before;

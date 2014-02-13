@@ -37,7 +37,7 @@ import org.hibernate.ogm.datastore.spi.TupleSnapshot;
 import org.hibernate.ogm.dialect.neo4j.Neo4j;
 import org.hibernate.ogm.dialect.neo4j.Neo4jDialect;
 import org.hibernate.ogm.dialect.neo4j.Neo4jProperties;
-import org.hibernate.ogm.dialect.neo4j.datastore.impl.Neo4jDatastoreProvider;
+import org.hibernate.ogm.dialect.neo4j.impl.datastore.Neo4jDatastoreProvider;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.options.generic.document.AssociationStorageType;
 import org.hibernate.ogm.options.navigation.context.GlobalContext;

@@ -30,7 +30,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.ogm.cfg.OgmProperties;
 import org.hibernate.ogm.dialect.mongodb.MongoDBProperties;
-import org.hibernate.ogm.dialect.mongodb.datastore.impl.MongoDBDatastoreProvider;
+import org.hibernate.ogm.dialect.mongodb.impl.datastore.MongoDBDatastoreProvider;
 import org.hibernate.ogm.test.utils.TestHelper;
 import org.junit.Rule;
 import org.junit.Test;

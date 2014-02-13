@@ -23,7 +23,7 @@ package org.hibernate.ogm.dialect.neo4j.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.ogm.dialect.neo4j.datastore.impl.Neo4jDatastoreProvider;
+import org.hibernate.ogm.dialect.neo4j.impl.datastore.Neo4jDatastoreProvider;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.RowKey;
 import org.neo4j.graphdb.Node;

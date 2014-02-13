@@ -28,8 +28,8 @@ import java.util.Map;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.QueryParser;
 import org.hibernate.hql.ast.spi.EntityNamesResolver;
-import org.hibernate.ogm.dialect.mongodb.query.parsing.MongoDBProcessingChain;
-import org.hibernate.ogm.dialect.mongodb.query.parsing.MongoDBQueryParsingResult;
+import org.hibernate.ogm.dialect.mongodb.impl.query.parsing.MongoDBProcessingChain;
+import org.hibernate.ogm.dialect.mongodb.impl.query.parsing.MongoDBQueryParsingResult;
 import org.hibernate.ogm.test.mongodb.query.parsing.model.IndexedEntity;
 import org.hibernate.ogm.test.utils.MapBasedEntityNamesResolver;
 import org.hibernate.ogm.test.utils.OgmTestCase;
@@ -37,8 +37,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Integration test for {@link org.hibernate.ogm.dialect.mongodb.query.parsing.MongoDBQueryResolverDelegate} and
- * {@link org.hibernate.ogm.dialect.mongodb.query.parsing.MongoDBQueryRendererDelegate}.
+ * Integration test for {@link org.hibernate.ogm.dialect.mongodb.impl.query.parsing.MongoDBQueryResolverDelegate} and
+ * {@link org.hibernate.ogm.dialect.mongodb.impl.query.parsing.MongoDBQueryRendererDelegate}.
  *
  * @author Gunnar Morling
  */

@@ -23,8 +23,8 @@ package org.hibernate.ogm.test.mongodb.options;
 import static org.fest.assertions.Assertions.assertThat;
 
 import org.hibernate.ogm.dialect.mongodb.MongoDB;
+import org.hibernate.ogm.dialect.mongodb.impl.options.WriteConcernOption;
 import org.hibernate.ogm.dialect.mongodb.options.WriteConcernType;
-import org.hibernate.ogm.dialect.mongodb.options.impl.WriteConcernOption;
 import org.hibernate.ogm.dialect.mongodb.options.mapping.MongoDBGlobalContext;
 import org.hibernate.ogm.options.navigation.impl.ConfigurationContext;
 import org.hibernate.ogm.options.navigation.impl.WritableOptionsServiceContext;

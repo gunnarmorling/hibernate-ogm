@@ -33,8 +33,8 @@ import java.util.Set;
 import org.hibernate.ogm.datastore.spi.AssociationSnapshot;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.dialect.mongodb.MongoDBDialect;
-import org.hibernate.ogm.dialect.mongodb.datastore.impl.AssociationStorageStrategy;
 import org.hibernate.ogm.dialect.mongodb.impl.MongoDBTupleSnapshot.SnapshotType;
+import org.hibernate.ogm.dialect.mongodb.impl.datastore.AssociationStorageStrategy;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.RowKey;
 

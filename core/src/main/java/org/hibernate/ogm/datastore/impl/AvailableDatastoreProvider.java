@@ -29,11 +29,11 @@ package org.hibernate.ogm.datastore.impl;
  */
 public enum AvailableDatastoreProvider {
 	MAP( "org.hibernate.ogm.datastore.map.impl.MapDatastoreProvider" ),
-	INFINISPAN( "org.hibernate.ogm.dialect.infinispan.datastore.impl.InfinispanDatastoreProvider" ),
-	EHCACHE( "org.hibernate.ogm.dialect.ehcache.datastore.impl.EhcacheDatastoreProvider" ),
-	MONGODB( "org.hibernate.ogm.dialect.mongodb.datastore.impl.MongoDBDatastoreProvider" ),
-	NEO4J_EMBEDDED( "org.hibernate.ogm.dialect.neo4j.datastore.impl.Neo4jDatastoreProvider" ),
-	COUCHDB( "org.hibernate.ogm.dialect.couchdb.datastore.impl.CouchDBDatastoreProvider" );
+	INFINISPAN( "org.hibernate.ogm.dialect.infinispan.impl.datastore.InfinispanDatastoreProvider" ),
+	EHCACHE( "org.hibernate.ogm.dialect.ehcache.impl.datastore.EhcacheDatastoreProvider" ),
+	MONGODB( "org.hibernate.ogm.dialect.mongodb.impl.datastore.MongoDBDatastoreProvider" ),
+	NEO4J_EMBEDDED( "org.hibernate.ogm.dialect.neo4j.impl.datastore.Neo4jDatastoreProvider" ),
+	COUCHDB( "org.hibernate.ogm.dialect.couchdb.impl.datastore.CouchDBDatastoreProvider" );
 
 	private String datastoreProviderClassName;
 

@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.hibernate.ogm.cfg.OgmProperties;
 import org.hibernate.ogm.dialect.mongodb.MongoDBProperties;
-import org.hibernate.ogm.dialect.mongodb.datastore.impl.configuration.MongoDBConfiguration;
+import org.hibernate.ogm.dialect.mongodb.impl.datastore.configuration.MongoDBConfiguration;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

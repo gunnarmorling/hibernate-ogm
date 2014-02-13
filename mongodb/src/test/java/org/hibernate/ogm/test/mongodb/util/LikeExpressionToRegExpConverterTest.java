@@ -22,7 +22,7 @@ package org.hibernate.ogm.test.mongodb.util;
 
 import static org.fest.assertions.Assertions.assertThat;
 
-import org.hibernate.ogm.dialect.mongodb.util.LikeExpressionToRegExpConverter;
+import org.hibernate.ogm.dialect.mongodb.impl.util.LikeExpressionToRegExpConverter;
 import org.junit.Test;
 
 /**
