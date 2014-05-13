@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * JBoss, Home of Professional Open Source
- * Copyright 2012-2013 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -18,25 +18,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.service.impl;
+package org.hibernate.ogm.query.spi;
 
-import java.util.Map;
+import java.util.Collection;
 
-import org.hibernate.Query;
-import org.hibernate.ogm.OgmSession;
-import org.hibernate.service.Service;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 
 /**
- * There should be a single QueryParserService implementation registered,
- * but we expect to support multiple types using different or hybrid
- * strategies.
+ * Specification of a native non String-based backend query, e.g. using a {@code DBObject} in the case of MongoDB.
+ *
+ * @author Gunnar Morling
  */
-public interface QueryParserService extends Service {
+public class NativeNoSqlQuerySpecification<Q> extends NativeSQLQuerySpecification {
 
-	/**
-	 * Experimental!
-	 * Parameters will very likely need to change.
-	 */
-	Query getParsedQueryExecutor(OgmSession session, String queryString, Map<String, Object> namedParameters);
+	private final Q query;
 
+	public NativeNoSqlQuerySpecification(Q query, NativeSQLQueryReturn[] queryReturns, Collection<String> querySpaces) {
+		super( query.toString(), queryReturns, querySpaces );
+		this.query = query;
+	}
+
+	public Q getQuery() {
+		return query;
+	}
 }

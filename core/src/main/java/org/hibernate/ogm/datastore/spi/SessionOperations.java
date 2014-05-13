@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * JBoss, Home of Professional Open Source
- * Copyright 2012-2013 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -18,25 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.service.impl;
-
-import java.util.Map;
-
-import org.hibernate.Query;
-import org.hibernate.ogm.OgmSession;
-import org.hibernate.service.Service;
+package org.hibernate.ogm.datastore.spi;
 
 /**
- * There should be a single QueryParserService implementation registered,
- * but we expect to support multiple types using different or hybrid
- * strategies.
+ * Sub-types provide session-level functionality specific to a given datastore.
+ *
+ * @author Gunnar Morling
  */
-public interface QueryParserService extends Service {
-
-	/**
-	 * Experimental!
-	 * Parameters will very likely need to change.
-	 */
-	Query getParsedQueryExecutor(OgmSession session, String queryString, Map<String, Object> namedParameters);
+public interface SessionOperations {
 
 }
