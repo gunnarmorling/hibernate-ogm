@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.ogm.test.integration.jboss;
+package org.hibernate.ogm.test.integration.jboss.mongodb;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,12 +23,13 @@ import org.hibernate.ogm.failure.ErrorHandler.RollbackContext;
 import org.hibernate.ogm.failure.operation.CreateTuple;
 import org.hibernate.ogm.failure.operation.GridDialectOperation;
 import org.hibernate.ogm.failure.operation.OperationType;
-import org.hibernate.ogm.test.integration.jboss.errorhandler.TestErrorHandler;
-import org.hibernate.ogm.test.integration.jboss.model.EmailAddress;
+import org.hibernate.ogm.test.integration.jboss.ModuleMemberRegistrationScenario;
 import org.hibernate.ogm.test.integration.jboss.model.Member;
-import org.hibernate.ogm.test.integration.jboss.model.PhoneNumber;
-import org.hibernate.ogm.test.integration.jboss.service.ContactManagementService;
-import org.hibernate.ogm.test.integration.jboss.service.PhoneNumberService;
+import org.hibernate.ogm.test.integration.jboss.mongodb.errorhandler.TestErrorHandler;
+import org.hibernate.ogm.test.integration.jboss.mongodb.model.EmailAddress;
+import org.hibernate.ogm.test.integration.jboss.mongodb.model.PhoneNumber;
+import org.hibernate.ogm.test.integration.jboss.mongodb.service.ContactManagementService;
+import org.hibernate.ogm.test.integration.jboss.mongodb.service.PhoneNumberService;
 import org.hibernate.ogm.test.integration.jboss.util.ModuleMemberRegistrationDeployment;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
