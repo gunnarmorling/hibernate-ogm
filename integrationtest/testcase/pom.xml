@@ -47,5 +47,10 @@
             <artifactId>hibernate-ogm-mongodb</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hibernate-ogm-neo4j</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

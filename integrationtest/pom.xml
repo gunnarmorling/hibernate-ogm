@@ -140,7 +140,6 @@
 
     <modules>
         <module>testcase</module>
-        <module>neo4j</module>
     </modules>
 
     <profiles>
