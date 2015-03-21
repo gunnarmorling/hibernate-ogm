@@ -27,7 +27,7 @@ import org.junit.Test;
 public abstract class ModuleMemberRegistrationScenario {
 
 	@Inject
-	MemberRegistration memberRegistration;
+	protected MemberRegistration memberRegistration;
 
 	@After
 	public void closeEntityManager() {
