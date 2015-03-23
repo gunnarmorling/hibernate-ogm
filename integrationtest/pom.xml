@@ -7,7 +7,7 @@
     </parent>
 
     <artifactId>hibernate-ogm-integrationtest</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <name>Hibernate OGM Integration and performance Tests</name>
     <description>Hibernate OGM integration and performance tests</description>
 
@@ -15,6 +15,7 @@
         <!-- Skipping enforcer plug-in as AS/Arquillian cause several dependency
             convergence issues -->
         <enforcer.skip>true</enforcer.skip>
+        <maven.deploy.skip>true</maven.deploy.skip>
         <version.wildfly>8.2.0.Final</version.wildfly>
         <jboss.home>${project.build.directory}/wildfly-${version.wildfly}</jboss.home>
     </properties>
@@ -33,60 +34,76 @@
     </dependencyManagement>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                     <artifactId>maven-checkstyle-plugin</artifactId>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <configuration>
-                        <skip>true</skip>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-failsafe-plugin</artifactId>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>integration-test</goal>
-                                <goal>verify</goal>
-                            </goals>
-                            <configuration>
-                                <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <executions>
-                        <execution>
-                            <id>build-test-jar</id>
-                            <goals>
-                                <goal>test-jar</goal>
-                            </goals>
-                            <configuration>
-                                <archive>
-                                    <manifest>
-                                        <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                                        <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                                    </manifest>
-                                </archive>
-                                <excludes>
-                                    <exclude>**/hibernate.properties</exclude>
-                                    <exclude>**/log4j.properties</exclude>
-                                </excludes>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+            </testResource>
+        </testResources>
+        <plugins>
+            <plugin>
+                 <artifactId>maven-checkstyle-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build-test-jar</id>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                </manifest>
+                            </archive>
+                            <excludes>
+                                <exclude>**/hibernate.properties</exclude>
+                                <exclude>**/log4j.properties</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <dependencies>
-       <dependency>
+        <!-- Hibernate OGM -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hibernate-ogm-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hibernate-ogm-mongodb</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hibernate-ogm-neo4j</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+         <!-- Test tooling -->
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -137,10 +154,6 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
-    <modules>
-        <module>testcase</module>
-    </modules>
 
     <profiles>
         <profile>
