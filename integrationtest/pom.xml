@@ -15,6 +15,8 @@
         <!-- Skipping enforcer plug-in as AS/Arquillian cause several dependency
             convergence issues -->
         <enforcer.skip>true</enforcer.skip>
+        <version.wildfly>8.2.0.Final</version.wildfly>
+        <jboss.home>${project.build.directory}/wildfly-${version.wildfly}</jboss.home>
     </properties>
 
     <dependencyManagement>
@@ -150,8 +152,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.wildfly>8.2.0.Final</version.wildfly>
-                <jboss.home>${project.build.directory}/wildfly-${version.wildfly}</jboss.home>
+                <wildfly.management.port>9990</wildfly.management.port>
             </properties>
             <dependencies>
             <dependency>
@@ -223,6 +224,110 @@
                 </plugins>
             </build>
         </profile>
+
+        <!-- Starts WildFly once for all tests via the  wildlfly-maven-plugin -->
+        <profile>
+            <id>wildfly-external</id>
+            <activation>
+                <property>
+                    <name>env.WILDFLY_PORT</name>
+                </property>
+            </activation>
+            <properties>
+                <wildfly.management.port>${env.WILDFLY_MANAGEMENT_PORT}</wildfly.management.port>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.wildfly</groupId>
+                    <artifactId>wildfly-arquillian-container-remote</artifactId>
+                    <version>${version.wildfly}</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>unpack</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>unpack</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>org.wildfly</groupId>
+                                            <artifactId>wildfly-dist</artifactId>
+                                            <version>${version.wildfly}</version>
+                                            <type>zip</type>
+                                            <overWrite>false</overWrite>
+                                            <outputDirectory>${project.build.directory}</outputDirectory>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>${project.groupId}</groupId>
+                                            <artifactId>hibernate-ogm-modules-wildfly8</artifactId>
+                                            <version>${project.version}</version>
+                                            <type>zip</type>
+                                            <overWrite>false</overWrite>
+                                            <outputDirectory>${jboss.home}/modules</outputDirectory>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>org.hibernate</groupId>
+                                            <artifactId>hibernate-search-modules</artifactId>
+                                            <version>${hibernateSearchVersion}</version>
+                                            <classifier>wildfly-8-dist</classifier>
+                                            <type>zip</type>
+                                            <overWrite>false</overWrite>
+                                            <outputDirectory>${jboss.home}/modules</outputDirectory>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>org.infinispan</groupId>
+                                            <artifactId>infinispan-as-embedded-modules</artifactId>
+                                            <version>${infinispanVersion}</version>
+                                            <type>zip</type>
+                                            <overWrite>false</overWrite>
+                                            <outputDirectory>${jboss.home}/modules</outputDirectory>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.wildfly.plugins</groupId>
+                        <artifactId>wildfly-maven-plugin</artifactId>
+                        <version>1.1.0.Alpha1</version>
+                        <configuration>
+                            <jbossHome>${jboss.home}</jbossHome>
+                            <port>${wildfly.management.port}</port>
+                            <javaOpts>
+                                <javaOpt>-Djboss.http.port=${env.WILDFLY_PORT}</javaOpt>
+                                <javaOpt>-Djboss.management.http.port=${env.WILDFLY_MANAGEMENT_PORT}</javaOpt>
+                            </javaOpts>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>start-wildfly</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>start</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>stop-wildfly</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>shutdown</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <profile>
             <!--
                 This profile won't download EAP and it will use the one defined in the variable eap.home.
