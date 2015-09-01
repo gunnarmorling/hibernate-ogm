@@ -187,6 +187,7 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 	 */
 	private DBObject getEmbeddingEntity(AssociationKey key, AssociationContext associationContext) {
 		DBObject embeddingEntityDocument = associationContext.getEntityTuple() != null ? ( (MongoDBTupleSnapshot) associationContext.getEntityTuple().getSnapshot() ).getDbObject() : null;
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 
 		if ( embeddingEntityDocument != null ) {
 			return embeddingEntityDocument;
@@ -196,7 +197,7 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 
 			DBCollection collection = getCollection( key.getEntityKey() );
 			DBObject searchObject = prepareIdObject( key.getEntityKey() );
-			DBObject projection = getProjection( key, true );
+			DBObject projection = getProjection( metadata, true );
 
 			return collection.findOne( searchObject, projection, readPreference );
 		}
@@ -448,15 +449,16 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 
 	//not for embedded
 	private DBObject findAssociation(AssociationKey key, AssociationContext associationContext, AssociationStorageStrategy storageStrategy) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 		ReadPreference readPreference = getReadPreference( associationContext );
 		final DBObject associationKeyObject = associationKeyToObject( key, storageStrategy );
 
-		return getAssociationCollection( key, storageStrategy ).findOne( associationKeyObject, getProjection( key, false ), readPreference );
+		return getAssociationCollection( key, storageStrategy ).findOne( associationKeyObject, getProjection( metadata, false ), readPreference );
 	}
 
-	private DBObject getProjection(AssociationKey key, boolean embedded) {
+	private DBObject getProjection(AssociationKeyMetadata metadata, boolean embedded) {
 		if ( embedded ) {
-			return getProjection( Collections.singletonList( key.getMetadata().getCollectionRole() ) );
+			return getProjection( Collections.singletonList( metadata.getCollectionRole() ) );
 		}
 		else {
 			return getProjection( ROWS_FIELDNAME_LIST );
@@ -471,11 +473,12 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 	@Override
 	public Association getAssociation(AssociationKey key, AssociationContext associationContext) {
 		AssociationStorageStrategy storageStrategy = getAssociationStorageStrategy( key, associationContext );
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 
-		if ( isEmbeddedAssociation( key ) && isInTheQueue( key.getEntityKey(), associationContext ) ) {
+		if ( isEmbeddedAssociation( metadata ) && isInTheQueue( key.getEntityKey(), associationContext ) ) {
 			// The association is embedded and the owner of the association is in the insertion queue
 			DBObject idObject = prepareIdObject( key.getEntityKey() );
-			return new Association( new MongoDBAssociationSnapshot( idObject, key, storageStrategy ) );
+			return new Association( new MongoDBAssociationSnapshot( idObject, key, metadata, storageStrategy ) );
 		}
 
 		// We need to execute the previous operations first or it won't be able to find the key that should have
@@ -484,8 +487,8 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 		if ( storageStrategy == AssociationStorageStrategy.IN_ENTITY ) {
 			DBObject entity = getEmbeddingEntity( key, associationContext );
 
-			if ( entity != null && hasField( entity, key.getMetadata().getCollectionRole() ) ) {
-				return new Association( new MongoDBAssociationSnapshot( entity, key, storageStrategy ) );
+			if ( entity != null && hasField( entity, metadata.getCollectionRole() ) ) {
+				return new Association( new MongoDBAssociationSnapshot( entity, key, metadata, storageStrategy ) );
 			}
 			else {
 				return null;
@@ -496,23 +499,24 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 			return null;
 		}
 		else {
-			return new Association( new MongoDBAssociationSnapshot( result, key, storageStrategy ) );
+			return new Association( new MongoDBAssociationSnapshot( result, key, metadata, storageStrategy ) );
 		}
 	}
 
-	private boolean isEmbeddedAssociation(AssociationKey key) {
-		return AssociationKind.EMBEDDED_COLLECTION == key.getMetadata().getAssociationKind();
+	private boolean isEmbeddedAssociation(AssociationKeyMetadata metadata) {
+		return AssociationKind.EMBEDDED_COLLECTION == metadata.getAssociationKind();
 	}
 
 	@Override
 	public Association createAssociation(AssociationKey key, AssociationContext associationContext) {
 		AssociationStorageStrategy storageStrategy = getAssociationStorageStrategy( key, associationContext );
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 
 		DBObject document = storageStrategy == AssociationStorageStrategy.IN_ENTITY
 				? getEmbeddingEntity( key, associationContext )
 				: associationKeyToObject( key, storageStrategy );
 
-		return new Association( new MongoDBAssociationSnapshot( document, key, storageStrategy ) );
+		return new Association( new MongoDBAssociationSnapshot( document, key, metadata, storageStrategy ) );
 	}
 
 	/**
@@ -532,15 +536,16 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 	 */
 	private Object getAssociationRows(Association association, AssociationKey key, AssociationContext associationContext) {
 		boolean organizeByRowKey = DotPatternMapHelpers.organizeAssociationMapByRowKey( association, key, associationContext );
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 
 		// transform map entries such as ( addressType='home', address_id=123) into the more
 		// natural ( { 'home'=123 }
 		if ( organizeByRowKey ) {
-			String rowKeyColumn = organizeByRowKey ? key.getMetadata().getRowKeyIndexColumnNames()[0] : null;
+			String rowKeyColumn = organizeByRowKey ? metadata.getRowKeyIndexColumnNames()[0] : null;
 			DBObject rows = new BasicDBObject();
 
 			for ( RowKey rowKey : association.getKeys() ) {
-				DBObject row = (DBObject) getAssociationRow( association.get( rowKey ), key );
+				DBObject row = (DBObject) getAssociationRow( association.get( rowKey ), key, metadata );
 
 				String rowKeyValue = (String) row.removeField( rowKeyColumn );
 
@@ -560,15 +565,15 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 			List<Object> rows = new ArrayList<>();
 
 			for ( RowKey rowKey : association.getKeys() ) {
-				rows.add( getAssociationRow( association.get( rowKey ), key ) );
+				rows.add( getAssociationRow( association.get( rowKey ), key, metadata ) );
 			}
 
 			return rows;
 		}
 	}
 
-	private Object getAssociationRow(Tuple row, AssociationKey associationKey) {
-		String[] rowKeyColumnsToPersist = associationKey.getMetadata().getColumnsWithoutKeyColumns( row.getColumnNames() );
+	private Object getAssociationRow(Tuple row, AssociationKey associationKey, AssociationKeyMetadata metadata) {
+		String[] rowKeyColumnsToPersist = metadata.getColumnsWithoutKeyColumns( row.getColumnNames() );
 
 		// return value itself if there is only a single column to store
 		if ( rowKeyColumnsToPersist.length == 1 ) {
@@ -578,7 +583,7 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 		else {
 			// if the columns are only made of the embedded id columns, remove the embedded id property prefix
 			// collectionrole: [ { id: { id1: "foo", id2: "bar" } } ] becomes collectionrole: [ { id1: "foo", id2: "bar" } ]
-			String prefix = getColumnSharedPrefixOfAssociatedEntityLink( associationKey );
+			String prefix = getColumnSharedPrefixOfAssociatedEntityLink( metadata );
 
 			DBObject rowObject = new BasicDBObject( rowKeyColumnsToPersist.length );
 			for ( String column : rowKeyColumnsToPersist ) {
@@ -595,6 +600,8 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 
 	@Override
 	public void insertOrUpdateAssociation(AssociationKey key, Association association, AssociationContext associationContext) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
+
 		DBCollection collection;
 		DBObject query;
 		MongoDBAssociationSnapshot assocSnapshot = (MongoDBAssociationSnapshot) association.getSnapshot();
@@ -604,15 +611,15 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 		WriteConcern writeConcern = getWriteConcern( associationContext );
 
 		Object rows = getAssociationRows( association, key, associationContext );
-		Object toStore = key.getMetadata().getAssociationType() == AssociationType.ONE_TO_ONE ? ( (List<?>) rows ).get( 0 ) : rows;
+		Object toStore = metadata.getAssociationType() == AssociationType.ONE_TO_ONE ? ( (List<?>) rows ).get( 0 ) : rows;
 
 		if ( storageStrategy == AssociationStorageStrategy.IN_ENTITY ) {
 			collection = this.getCollection( key.getEntityKey() );
 			query = this.prepareIdObject( key.getEntityKey() );
-			associationField = key.getMetadata().getCollectionRole();
+			associationField = metadata.getCollectionRole();
 
 			//TODO would that fail if getCollectionRole has dots?
-			( (MongoDBTupleSnapshot) associationContext.getEntityTuple().getSnapshot() ).getDbObject().put( key.getMetadata().getCollectionRole(), toStore );
+			( (MongoDBTupleSnapshot) associationContext.getEntityTuple().getSnapshot() ).getDbObject().put( metadata.getCollectionRole(), toStore );
 		}
 		else {
 			collection = getAssociationCollection( key, storageStrategy );
@@ -628,16 +635,17 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
 		AssociationStorageStrategy storageStrategy = getAssociationStorageStrategy( key, associationContext );
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 		WriteConcern writeConcern = getWriteConcern( associationContext );
 
 		if ( storageStrategy == AssociationStorageStrategy.IN_ENTITY ) {
 			DBObject entity = this.prepareIdObject( key.getEntityKey() );
 			if ( entity != null ) {
 				BasicDBObject updater = new BasicDBObject();
-				addSubQuery( "$unset", updater, key.getMetadata().getCollectionRole(), Integer.valueOf( 1 ) );
+				addSubQuery( "$unset", updater, metadata.getCollectionRole(), Integer.valueOf( 1 ) );
 				DBObject dbObject = getEmbeddingEntity( key, associationContext );
 				if ( dbObject != null ) {
-					dbObject.removeField( key.getMetadata().getCollectionRole() );
+					dbObject.removeField( metadata.getCollectionRole() );
 					getCollection( key.getEntityKey() ).update( entity, updater, true, false, writeConcern );
 				}
 			}
@@ -689,7 +697,7 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 
 	@Override
 	public boolean isStoredInEntityStructure(AssociationKeyMetadata associationKeyMetadata, AssociationTypeContext associationTypeContext) {
-		return getAssociationStorageStrategy( associationKeyMetadata, associationTypeContext ) == AssociationStorageStrategy.IN_ENTITY;
+		return getAssociationStorageStrategy( associationTypeContext ) == AssociationStorageStrategy.IN_ENTITY;
 	}
 
 	@Override
@@ -872,7 +880,7 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 	}
 
 	private AssociationStorageStrategy getAssociationStorageStrategy(AssociationKey key, AssociationContext associationContext) {
-		return getAssociationStorageStrategy( key.getMetadata(), associationContext.getAssociationTypeContext() );
+		return getAssociationStorageStrategy( associationContext.getAssociationTypeContext() );
 	}
 
 	/**
@@ -880,7 +888,9 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 	 * given via the option mechanism, that one will be taken, otherwise the default value as given via the
 	 * corresponding configuration property is applied.
 	 */
-	private AssociationStorageStrategy getAssociationStorageStrategy(AssociationKeyMetadata keyMetadata, AssociationTypeContext associationTypeContext) {
+	private AssociationStorageStrategy getAssociationStorageStrategy(AssociationTypeContext associationTypeContext) {
+		AssociationKeyMetadata metadata = associationTypeContext.getAssociationKeyMetadata();
+
 		AssociationStorageType associationStorage = associationTypeContext
 				.getOptionsContext()
 				.getUnique( AssociationStorageOption.class );
@@ -889,7 +899,7 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 				.getOptionsContext()
 				.getUnique( AssociationDocumentStorageOption.class );
 
-		return AssociationStorageStrategy.getInstance( keyMetadata, associationStorage, associationDocumentStorageType );
+		return AssociationStorageStrategy.getInstance( metadata, associationStorage, associationDocumentStorageType );
 	}
 
 	@Override
@@ -965,7 +975,8 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 
 	private void executeBatchUpdateAssociation(Map<DBCollection, BatchInsertionTask> inserts, InsertOrUpdateAssociationOperation updateOp) {
 		AssociationKey associationKey = updateOp.getAssociationKey();
-		if ( isEmbeddedAssociation( associationKey ) ) {
+		AssociationKeyMetadata metadata = updateOp.getContext().getAssociationTypeContext().getAssociationKeyMetadata();
+		if ( isEmbeddedAssociation( metadata ) ) {
 			DBCollection collection = getCollection( associationKey.getEntityKey() );
 			BatchInsertionTask batchInserts = inserts.get( collection );
 			if ( batchInserts != null && batchInserts.containsKey( associationKey.getEntityKey() ) ) {
@@ -975,7 +986,7 @@ public class MongoDBDialect extends BaseGridDialect implements QueryableGridDial
 				BatchInsertionTask insertTask = getOrCreateBatchInsertionTask( inserts, associationKey.getEntityKey().getMetadata(), collection, writeConcern );
 				DBObject documentForInsertion = insertTask.get( associationKey.getEntityKey() );
 				Object embeddedElements = getAssociationRows( updateOp.getAssociation(), updateOp.getAssociationKey(), updateOp.getContext() );
-				String collectionRole = associationKey.getMetadata().getCollectionRole();
+				String collectionRole = metadata.getCollectionRole();
 				MongoHelpers.setValue( documentForInsertion, collectionRole, embeddedElements );
 			}
 			else {

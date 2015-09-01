@@ -131,7 +131,8 @@ public class EhcacheDialect<EK, AK, ISK> extends BaseGridDialect {
 
 	@Override
 	public Association getAssociation(AssociationKey key, AssociationContext associationContext) {
-		final Cache<AK> associationCache = getCacheManager().getAssociationCache( key.getMetadata() );
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
+		final Cache<AK> associationCache = getCacheManager().getAssociationCache( metadata );
 		final Element element = associationCache.get( getKeyProvider().getAssociationCacheKey( key ) );
 
 		if ( element == null ) {
@@ -146,7 +147,8 @@ public class EhcacheDialect<EK, AK, ISK> extends BaseGridDialect {
 
 	@Override
 	public Association createAssociation(AssociationKey key, AssociationContext associationContext) {
-		final Cache<AK> associationCache = getCacheManager().getAssociationCache( key.getMetadata() );
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
+		final Cache<AK> associationCache = getCacheManager().getAssociationCache( metadata );
 		Map<SerializableRowKey, Map<String, Object>> association = new HashMap<SerializableRowKey, Map<String, Object>>();
 		associationCache.put( new Element( getKeyProvider().getAssociationCacheKey( key ), association ) );
 		return new Association( new SerializableMapAssociationSnapshot( association ) );
@@ -154,6 +156,7 @@ public class EhcacheDialect<EK, AK, ISK> extends BaseGridDialect {
 
 	@Override
 	public void insertOrUpdateAssociation(AssociationKey key, Association association, AssociationContext associationContext) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 		Map<SerializableRowKey, Map<String, Object>> associationRows = ( (SerializableMapAssociationSnapshot) association.getSnapshot() ).getUnderlyingMap();
 
 		for ( AssociationOperation action : association.getOperations() ) {
@@ -169,13 +172,14 @@ public class EhcacheDialect<EK, AK, ISK> extends BaseGridDialect {
 			}
 		}
 
-		final Cache<AK> associationCache = getCacheManager().getAssociationCache( key.getMetadata() );
+		final Cache<AK> associationCache = getCacheManager().getAssociationCache( metadata );
 		associationCache.put( new Element( getKeyProvider().getAssociationCacheKey( key ), associationRows ) );
 	}
 
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
-		getCacheManager().getAssociationCache( key.getMetadata() ).remove( getKeyProvider().getAssociationCacheKey( key ) );
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
+		getCacheManager().getAssociationCache( metadata ).remove( getKeyProvider().getAssociationCacheKey( key ) );
 	}
 
 	@Override

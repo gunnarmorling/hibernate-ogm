@@ -9,7 +9,6 @@ package org.hibernate.ogm.datastore.couchdb.test.dialect;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.hibernate.ogm.datastore.couchdb.utils.CouchDBTestHelper.environmentProperties;
 import static org.hibernate.ogm.datastore.couchdb.utils.CouchDBTestHelper.initEnvironmentProperties;
-import static org.hibernate.ogm.util.impl.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.ogm.utils.GridDialectOperationContexts.emptyAssociationContext;
 import static org.hibernate.ogm.utils.GridDialectOperationContexts.emptyTupleContext;
 
@@ -26,8 +25,6 @@ import org.hibernate.ogm.model.impl.DefaultAssociationKeyMetadata;
 import org.hibernate.ogm.model.impl.DefaultEntityKeyMetadata;
 import org.hibernate.ogm.model.key.spi.AssociationKey;
 import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
-import org.hibernate.ogm.model.key.spi.AssociationKind;
-import org.hibernate.ogm.model.key.spi.AssociationType;
 import org.hibernate.ogm.model.key.spi.EntityKey;
 import org.hibernate.ogm.model.key.spi.RowKey;
 import org.hibernate.ogm.model.spi.Association;
@@ -110,13 +107,17 @@ public class CouchDBDialectTest {
 		Object[] columnValues = { "17" };
 		String tableName = "user_address";
 		String[] columnNames = { "id" };
-		String[] rowKeyColumnNames = new String[] { "id" };
 		EntityKey entityKey = createEntityKey( "user", new String[] { "id", "age" }, new Object[] { "17", 36 } );
-		String collectionRole = "addresses";
 
-		AssociationKey key = createAssociationKey( entityKey, collectionRole, tableName, columnNames, columnValues, rowKeyColumnNames );
+		AssociationKeyMetadata associationKeyMetadata = new DefaultAssociationKeyMetadata.Builder()
+			.table( tableName )
+			.columnNames( columnNames )
+			.associatedEntityKeyMetadata( new DefaultAssociatedEntityKeyMetadata( new String[0], null ) )
+			.build();
 
-		Association createAssociation = dialect.createAssociation( key, emptyAssociationContext() );
+		AssociationKey key = createAssociationKey( entityKey, tableName, columnNames, columnValues );
+
+		Association createAssociation = dialect.createAssociation( key, emptyAssociationContext( associationKeyMetadata ) );
 
 		assertThat( createAssociation.getSnapshot() ).isNotNull();
 		assertThat( createAssociation.getSnapshot().getRowKeys() ).isEmpty();
@@ -131,10 +132,17 @@ public class CouchDBDialectTest {
 		Tuple tuple = dialect.createTuple( entityKey, emptyTupleContext() );
 		dialect.insertOrUpdateTuple( entityKey, tuple, emptyTupleContext() );
 
+		AssociationKeyMetadata associationKeyMetadata = new DefaultAssociationKeyMetadata.Builder()
+			.table( tableName )
+			.columnNames( new String[] { "user_id" } )
+			.associatedEntityKeyMetadata( new DefaultAssociatedEntityKeyMetadata( new String[0], null ) )
+			.rowKeyColumnNames( rowKeyColumnNames )
+			.build();
+
 		AssociationKey key = createAssociationKey(
-				entityKey, "addresses", "user_address", new String[] { "user_id" }, new Object[] { "Emmanuel" }, rowKeyColumnNames
+				entityKey, tableName, new String[] { "user_id" }, new Object[] { "Emmanuel" }
 		);
-		Association createAssociation = dialect.createAssociation( key, emptyAssociationContext() );
+		Association createAssociation = dialect.createAssociation( key, emptyAssociationContext( associationKeyMetadata ) );
 
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put( "user_id", "Emmanuel" );
@@ -143,9 +151,9 @@ public class CouchDBDialectTest {
 
 		RowKey rowKey = new RowKey( rowKeyColumnNames, rowKeyColumnValues );
 		createAssociation.put( rowKey, associationTuple );
-		dialect.insertOrUpdateAssociation( key, createAssociation, emptyAssociationContext() );
+		dialect.insertOrUpdateAssociation( key, createAssociation, emptyAssociationContext( associationKeyMetadata ) );
 
-		Association actualAssociation = dialect.getAssociation( key, emptyAssociationContext() );
+		Association actualAssociation = dialect.getAssociation( key, emptyAssociationContext( associationKeyMetadata ) );
 		assertThat( actualAssociation.get( rowKey ).hashCode() ).isNotNull();
 	}
 
@@ -153,19 +161,8 @@ public class CouchDBDialectTest {
 		return new EntityKey( new DefaultEntityKeyMetadata( tableName, columnNames ), values );
 	}
 
-	private AssociationKey createAssociationKey(EntityKey ownerEntityKey, String collectionRole, String tableName, String[] columnNames, Object[] columnValues, String[] rowKeyColumnNames) {
-		AssociationKeyMetadata associationKeyMetadata = new DefaultAssociationKeyMetadata.Builder()
-			.table( tableName )
-			.columnNames( columnNames )
-			.rowKeyColumnNames( rowKeyColumnNames )
-			.associatedEntityKeyMetadata( new DefaultAssociatedEntityKeyMetadata( EMPTY_STRING_ARRAY, null ) )
-			.inverse( false )
-			.collectionRole( collectionRole )
-			.associationKind( AssociationKind.ASSOCIATION )
-			.associationType( AssociationType.BAG )
-			.build();
-
-		return new AssociationKey( associationKeyMetadata, columnValues, ownerEntityKey );
+	private AssociationKey createAssociationKey(EntityKey ownerEntityKey, String tableName, String[] columnNames, Object[] columnValues) {
+		return new AssociationKey( tableName, columnNames, columnValues, ownerEntityKey );
 	}
 
 	private void createDataStoreProvider() throws Exception {

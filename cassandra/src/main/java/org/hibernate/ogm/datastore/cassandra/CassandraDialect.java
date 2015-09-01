@@ -294,7 +294,7 @@ public class CassandraDialect implements GridDialect {
 			Association association,
 			AssociationContext associationContext) {
 
-		if ( key.getMetadata().isInverse() ) {
+		if ( associationContext.getAssociationTypeContext().getAssociationKeyMetadata().isInverse() ) {
 			return;
 		}
 
@@ -365,7 +365,7 @@ public class CassandraDialect implements GridDialect {
 
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
-		if ( key.getMetadata().isInverse() ) {
+		if ( associationContext.getAssociationTypeContext().getAssociationKeyMetadata().isInverse() ) {
 			return;
 		}
 

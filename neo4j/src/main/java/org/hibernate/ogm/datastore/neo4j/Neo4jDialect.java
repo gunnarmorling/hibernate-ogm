@@ -241,38 +241,37 @@ public class Neo4jDialect extends BaseGridDialect implements QueryableGridDialec
 	 * <p>
 	 * the first time with the information related to the owner of the association and the {@link RowKey},
 	 * the second time using the same {@link RowKey} but with the {@link AssociationKey} referring to the other side of the association.
-	 * @param associatedEntityKeyMetadata
 	 */
-	private Relationship createRelationship(AssociationKey associationKey, Tuple associationRow, AssociatedEntityKeyMetadata associatedEntityKeyMetadata) {
-		switch ( associationKey.getMetadata().getAssociationKind() ) {
+	private Relationship createRelationship(AssociationKey associationKey, AssociationKeyMetadata metadata, Tuple associationRow) {
+		switch ( metadata.getAssociationKind() ) {
 			case EMBEDDED_COLLECTION:
-				return createRelationshipWithEmbeddedNode( associationKey, associationRow, associatedEntityKeyMetadata );
+				return createRelationshipWithEmbeddedNode( associationKey, metadata, associationRow );
 			case ASSOCIATION:
-				return findOrCreateRelationshipWithEntityNode( associationKey, associationRow, associatedEntityKeyMetadata );
+				return findOrCreateRelationshipWithEntityNode( associationKey, metadata, associationRow );
 			default:
-				throw new AssertionFailure( "Unrecognized associationKind: " + associationKey.getMetadata().getAssociationKind() );
+				throw new AssertionFailure( "Unrecognized associationKind: " + metadata.getAssociationKind() );
 		}
 	}
 
-	private Relationship createRelationshipWithEmbeddedNode(AssociationKey associationKey, Tuple associationRow, AssociatedEntityKeyMetadata associatedEntityKeyMetadata) {
-		EntityKey embeddedKey = getEntityKey( associationRow, associatedEntityKeyMetadata );
-		Relationship relationship = associationQueries.get( associationKey.getMetadata() )
-				.createRelationshipForEmbeddedAssociation( dataBase, associationKey, embeddedKey );
-		applyProperties( associationKey, associationRow, relationship );
+	private Relationship createRelationshipWithEmbeddedNode(AssociationKey associationKey, AssociationKeyMetadata metadata, Tuple associationRow) {
+		EntityKey embeddedKey = getEntityKey( associationRow, metadata.getAssociatedEntityKeyMetadata() );
+		Relationship relationship = associationQueries.get( metadata )
+				.createRelationshipForEmbeddedAssociation( dataBase, associationKey, metadata, embeddedKey );
+		applyProperties( associationKey, metadata, associationRow, relationship );
 		return relationship;
 	}
 
-	private Relationship findOrCreateRelationshipWithEntityNode(AssociationKey associationKey, Tuple associationRow, AssociatedEntityKeyMetadata associatedEntityKeyMetadata) {
-		EntityKey targetEntityKey = getEntityKey( associationRow, associatedEntityKeyMetadata );
+	private Relationship findOrCreateRelationshipWithEntityNode(AssociationKey associationKey, AssociationKeyMetadata metadata, Tuple associationRow) {
+		EntityKey targetEntityKey = getEntityKey( associationRow, metadata.getAssociatedEntityKeyMetadata() );
 		Node targetNode = entityQueries.get( targetEntityKey.getMetadata() ).findEntity( dataBase, targetEntityKey.getColumnValues() );
-		return createRelationshipWithTargetNode( associationKey, associationRow, targetNode );
+		return createRelationshipWithTargetNode( associationKey, metadata, associationRow, targetNode );
 	}
 
 	/**
 	 * The only properties added to a relationship are the columns representing the index of the association.
 	 */
-	private void applyProperties(AssociationKey associationKey, Tuple associationRow, Relationship relationship) {
-		String[] indexColumns = associationKey.getMetadata().getRowKeyIndexColumnNames();
+	private void applyProperties(AssociationKey associationKey, AssociationKeyMetadata metadata, Tuple associationRow, Relationship relationship) {
+		String[] indexColumns = metadata.getRowKeyIndexColumnNames();
 		for ( int i = 0; i < indexColumns.length; i++ ) {
 			String propertyName = indexColumns[i];
 			Object propertyValue = associationRow.get( propertyName );
@@ -280,11 +279,11 @@ public class Neo4jDialect extends BaseGridDialect implements QueryableGridDialec
 		}
 	}
 
-	private Relationship createRelationshipWithTargetNode(AssociationKey associationKey, Tuple associationRow, Node targetNode) {
+	private Relationship createRelationshipWithTargetNode(AssociationKey associationKey, AssociationKeyMetadata metadata, Tuple associationRow, Node targetNode) {
 		EntityKey entityKey = associationKey.getEntityKey();
 		Node ownerNode = entityQueries.get( entityKey.getMetadata() ).findEntity( dataBase, entityKey.getColumnValues() );
-		Relationship relationship = ownerNode.createRelationshipTo( targetNode, withName( associationKey.getMetadata().getCollectionRole() ) );
-		applyProperties( associationKey, associationRow, relationship );
+		Relationship relationship = ownerNode.createRelationshipTo( targetNode, withName( metadata.getCollectionRole() ) );
+		applyProperties( associationKey, metadata, associationRow, relationship );
 		return relationship;
 	}
 
@@ -303,6 +302,8 @@ public class Neo4jDialect extends BaseGridDialect implements QueryableGridDialec
 
 	private Map<RowKey, Tuple> createAssociationMap(AssociationKey associationKey, AssociationContext associationContext, EntityKey entityKey) {
 		String relationshipType = associationContext.getAssociationTypeContext().getRoleOnMainSide();
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
+
 		ResourceIterator<Relationship> relationships = entityQueries.get( entityKey.getMetadata() )
 				.findAssociation( dataBase, entityKey.getColumnValues(), relationshipType );
 
@@ -310,9 +311,8 @@ public class Neo4jDialect extends BaseGridDialect implements QueryableGridDialec
 		try {
 			while ( relationships.hasNext() ) {
 				Relationship relationship = relationships.next();
-				AssociatedEntityKeyMetadata associatedEntityKeyMetadata = associationContext.getAssociationTypeContext().getAssociatedEntityKeyMetadata();
-				Neo4jTupleAssociationSnapshot snapshot = new Neo4jTupleAssociationSnapshot( relationship, associationKey, associatedEntityKeyMetadata );
-				RowKey rowKey = convert( associationKey, snapshot );
+				Neo4jTupleAssociationSnapshot snapshot = new Neo4jTupleAssociationSnapshot( relationship, associationKey, metadata );
+				RowKey rowKey = convert( metadata, snapshot );
 				tuples.put( rowKey, new Tuple( snapshot ) );
 			}
 			return tuples;
@@ -322,8 +322,8 @@ public class Neo4jDialect extends BaseGridDialect implements QueryableGridDialec
 		}
 	}
 
-	private RowKey convert(AssociationKey associationKey, Neo4jTupleAssociationSnapshot snapshot) {
-		String[] columnNames = associationKey.getMetadata().getRowKeyColumnNames();
+	private RowKey convert(AssociationKeyMetadata metadata, Neo4jTupleAssociationSnapshot snapshot) {
+		String[] columnNames = metadata.getRowKeyColumnNames();
 		Object[] values = new Object[columnNames.length];
 
 		for ( int i = 0; i < columnNames.length; i++ ) {
@@ -340,9 +340,11 @@ public class Neo4jDialect extends BaseGridDialect implements QueryableGridDialec
 
 	@Override
 	public void insertOrUpdateAssociation(AssociationKey key, Association association, AssociationContext associationContext) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
+
 		// If this is the inverse side of a bi-directional association, we don't create a relationship for this; this
 		// will happen when updating the main side
-		if ( key.getMetadata().isInverse() ) {
+		if ( metadata.isInverse() ) {
 			return;
 		}
 
@@ -373,12 +375,14 @@ public class Neo4jDialect extends BaseGridDialect implements QueryableGridDialec
 
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
+
 		// If this is the inverse side of a bi-directional association, we don't manage the relationship from this side
-		if ( key.getMetadata().isInverse() ) {
+		if ( metadata.isInverse() ) {
 			return;
 		}
 
-		associationQueries.get( key.getMetadata() ).removeAssociation( dataBase, key );
+		associationQueries.get( metadata ).removeAssociation( dataBase, key );
 	}
 
 	private void applyAssociationOperation(Association association, AssociationKey key, AssociationOperation operation, AssociationContext associationContext) {
@@ -387,32 +391,34 @@ public class Neo4jDialect extends BaseGridDialect implements QueryableGridDialec
 			removeAssociation( key, associationContext );
 			break;
 		case PUT:
-			putAssociationOperation( association, key, operation, associationContext.getAssociationTypeContext().getAssociatedEntityKeyMetadata() );
+			putAssociationOperation( association, key, operation, associationContext.getAssociationTypeContext() );
 			break;
 		case REMOVE:
-			removeAssociationOperation( association, key, operation, associationContext.getAssociationTypeContext().getAssociatedEntityKeyMetadata() );
+			removeAssociationOperation( association, key, operation, associationContext.getAssociationTypeContext() );
 			break;
 		}
 	}
 
-	private void putAssociationOperation(Association association, AssociationKey associationKey, AssociationOperation action, AssociatedEntityKeyMetadata associatedEntityKeyMetadata) {
-		Relationship relationship = associationQueries.get( associationKey.getMetadata() ).findRelationship( dataBase, associationKey, action.getKey() );
+	private void putAssociationOperation(Association association, AssociationKey associationKey, AssociationOperation action, AssociationTypeContext associationTypeContext) {
+		AssociationKeyMetadata metadata = associationTypeContext.getAssociationKeyMetadata();
+		Relationship relationship = associationQueries.get( metadata ).findRelationship( dataBase, associationKey, metadata, action.getKey() );
 
 		if (relationship != null) {
-			for ( String relationshipProperty : associationKey.getMetadata().getRowKeyIndexColumnNames() ) {
+			for ( String relationshipProperty : metadata.getRowKeyIndexColumnNames() ) {
 				relationship.setProperty( relationshipProperty, action.getValue().get( relationshipProperty ) );
 
 			}
 			GraphLogger.log( "Updated relationship: %1$s", relationship );
 		}
 		else {
-			relationship = createRelationship( associationKey, action.getValue(), associatedEntityKeyMetadata );
+			relationship = createRelationship( associationKey, metadata, action.getValue() );
 			GraphLogger.log( "Created relationship: %1$s", relationship );
 		}
 	}
 
-	private void removeAssociationOperation(Association association, AssociationKey associationKey, AssociationOperation action, AssociatedEntityKeyMetadata associatedEntityKeyMetadata) {
-		associationQueries.get( associationKey.getMetadata() ).removeAssociationRow( dataBase, associationKey, action.getKey() );
+	private void removeAssociationOperation(Association association, AssociationKey associationKey, AssociationOperation action, AssociationTypeContext associationTypeContext) {
+		AssociationKeyMetadata metadata = associationTypeContext.getAssociationKeyMetadata();
+		associationQueries.get( metadata ).removeAssociationRow( dataBase, associationKey, metadata, action.getKey() );
 	}
 
 	private void applyTupleOperations(EntityKey entityKey, Tuple tuple, Node node, Set<TupleOperation> operations, TupleContext tupleContext) {

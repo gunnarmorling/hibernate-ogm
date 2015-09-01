@@ -119,7 +119,7 @@ public class AssociationPersister {
 				);
 			}
 
-			associationKey = new AssociationKey( associationKeyMetadata, columnValues, ownerEntityKey );
+			associationKey = new AssociationKey( associationKeyMetadata.getTable(), associationKeyMetadata.getColumnNames(), columnValues, ownerEntityKey );
 		}
 
 		return associationKey;

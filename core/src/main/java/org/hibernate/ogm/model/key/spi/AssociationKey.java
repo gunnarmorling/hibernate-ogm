@@ -21,26 +21,25 @@ public final class AssociationKey {
 
 	//column value types do have to be serializable so AssociationKey is serializable
 	//should it be a Serializable[] type? It seems to be more pain than anything else
-	private final AssociationKeyMetadata metadata;
+	private final String tableName;
+	private final String[] columnNames;
 	private final Object[] columnValues;
 	private final int hashCode;
 
 	//role and entity key are not part of the object identity
 	private final EntityKey entityKey;
 
-	public AssociationKey(AssociationKeyMetadata metadata, Object[] columnValues, EntityKey entityKey) {
-		this.metadata = metadata;
-		if ( metadata.getColumnNames().length != columnValues.length ) {
+
+	public AssociationKey(String tableName, String[] columnNames, Object[] columnValues, EntityKey entityKey) {
+		this.tableName = tableName;
+		this.columnNames = columnNames;
+		if ( columnNames.length != columnValues.length ) {
 			throw new AssertionFailure( "Column names do not match column values" );
 		}
 		this.columnValues = columnValues;
 		this.entityKey = entityKey;
 
-		this.hashCode = metadata.hashCode() * 31 + Arrays.hashCode( columnValues );
-	}
-
-	public AssociationKeyMetadata getMetadata() {
-		return metadata;
+		this.hashCode = tableName.hashCode() * 31 + Arrays.hashCode( columnValues );
 	}
 
 	/**
@@ -49,7 +48,7 @@ public final class AssociationKey {
 	 * @return the table name of this key
 	 */
 	public String getTable() {
-		return metadata.getTable();
+		return tableName;
 	}
 
 	/**
@@ -70,7 +69,7 @@ public final class AssociationKey {
 	 * @return the columns names as an array, it never returns {@code null}
 	 */
 	public String[] getColumnNames() {
-		return metadata.getColumnNames();
+		return columnNames;
 	}
 
 	/**
@@ -103,7 +102,7 @@ public final class AssociationKey {
 		AssociationKey that = (AssociationKey) o;
 
 		// order of comparison matters on performance:
-		if ( !metadata.getTable().equals( that.metadata.getTable() ) ) {
+		if ( !tableName.equals( that.tableName ) ) {
 			return false;
 		}
 
@@ -111,7 +110,7 @@ public final class AssociationKey {
 		if ( !Arrays.equals( columnValues, that.columnValues ) ) {
 			return false;
 		}
-		if ( !Arrays.equals( metadata.getColumnNames(), that.metadata.getColumnNames() ) ) {
+		if ( !Arrays.equals( columnNames, that.columnNames ) ) {
 			return false;
 		}
 
@@ -130,10 +129,10 @@ public final class AssociationKey {
 		sb.append( getTable() );
 		sb.append( ") [" );
 		int i = 0;
-		for ( String column : metadata.getColumnNames() ) {
+		for ( String column : columnNames ) {
 			sb.append( column ).append( "=" ).append( columnValues[i] );
 			i++;
-			if ( i < metadata.getColumnNames().length ) {
+			if ( i < columnNames.length ) {
 				sb.append( ", " );
 			}
 		}

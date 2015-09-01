@@ -16,9 +16,7 @@ import org.hibernate.ogm.datastore.infinispan.InfinispanDialect;
 import org.hibernate.ogm.datastore.infinispan.impl.InfinispanDatastoreProvider;
 import org.hibernate.ogm.datastore.infinispan.persistencestrategy.common.externalizer.impl.ExternalizerIds;
 import org.hibernate.ogm.datastore.infinispan.persistencestrategy.common.externalizer.impl.VersionChecker;
-import org.hibernate.ogm.model.impl.DefaultAssociationKeyMetadata;
 import org.hibernate.ogm.model.key.spi.AssociationKey;
-import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 
 /**
@@ -64,14 +62,9 @@ public class AssociationKeyExternalizer implements AdvancedExternalizer<Associat
 		String[] columnNames = (String[]) input.readObject();
 		Object[] values = (Object[]) input.readObject();
 
-		AssociationKeyMetadata associationKeyMetadata = new DefaultAssociationKeyMetadata.Builder()
-				.table( tableName )
-				.columnNames( columnNames )
-				.build();
-
 		// the engine never accesses deserialized key instances so it's ok to leave the additional attributes
 		// null; we should still consider extract these attributes to avoid potential confusion
-		return new AssociationKey( associationKeyMetadata, values, null );
+		return new AssociationKey( tableName, columnNames, values, null );
 	}
 
 	@Override

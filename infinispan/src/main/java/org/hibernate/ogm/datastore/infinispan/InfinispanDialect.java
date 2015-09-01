@@ -140,7 +140,7 @@ public class InfinispanDialect<EK,AK,ISK> extends BaseGridDialect {
 	@Override
 	public Association getAssociation(AssociationKey key, AssociationContext associationContext) {
 		Cache<AK, Map<RowKey, Map<String, Object>>> cache = getCacheManager().getAssociationCache(
-				key.getMetadata()
+				associationContext.getAssociationTypeContext().getAssociationKeyMetadata()
 		);
 		AK cacheKey = getKeyProvider().getAssociationCacheKey( key );
 		Map<RowKey, Map<String, Object>> atomicMap = AtomicMapLookup.getFineGrainedAtomicMap( cache, cacheKey, false );
@@ -152,7 +152,7 @@ public class InfinispanDialect<EK,AK,ISK> extends BaseGridDialect {
 		//TODO we don't verify that it does not yet exist assuming that this ahs been done before by the calling code
 		//should we improve?
 		Cache<AK, Map<RowKey, Map<String, Object>>> cache = getCacheManager().getAssociationCache(
-				key.getMetadata()
+				associationContext.getAssociationTypeContext().getAssociationKeyMetadata()
 		);
 		AK cacheKey = getKeyProvider().getAssociationCacheKey( key );
 		Map<RowKey, Map<String, Object>> atomicMap = AtomicMapLookup.getFineGrainedAtomicMap( cache, cacheKey, true );
@@ -167,7 +167,7 @@ public class InfinispanDialect<EK,AK,ISK> extends BaseGridDialect {
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
 		Cache<AK, Map<RowKey, Map<String, Object>>> cache = getCacheManager().getAssociationCache(
-				key.getMetadata()
+				associationContext.getAssociationTypeContext().getAssociationKeyMetadata()
 		);
 		AK cacheKey = getKeyProvider().getAssociationCacheKey( key );
 		AtomicMapLookup.removeAtomicMap( cache, cacheKey );

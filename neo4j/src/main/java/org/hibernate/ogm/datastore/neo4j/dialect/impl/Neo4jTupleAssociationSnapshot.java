@@ -16,8 +16,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.ogm.model.key.spi.AssociatedEntityKeyMetadata;
 import org.hibernate.ogm.model.key.spi.AssociationKey;
+import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 import org.hibernate.ogm.model.key.spi.AssociationKind;
 import org.hibernate.ogm.model.spi.TupleSnapshot;
 import org.hibernate.ogm.util.impl.EmbeddedHelper;
@@ -32,16 +32,16 @@ public class Neo4jTupleAssociationSnapshot implements TupleSnapshot {
 
 	private final Map<String, Object> properties;
 
-	public Neo4jTupleAssociationSnapshot(Relationship relationship, AssociationKey associationKey, AssociatedEntityKeyMetadata associatedEntityKeyMetadata) {
-		properties = collectProperties( relationship, associationKey, associatedEntityKeyMetadata );
+	public Neo4jTupleAssociationSnapshot(Relationship relationship, AssociationKey associationKey, AssociationKeyMetadata metadata) {
+		properties = collectProperties( relationship, associationKey, metadata );
 	}
 
-	private static Map<String, Object> collectProperties(Relationship relationship, AssociationKey associationKey, AssociatedEntityKeyMetadata associatedEntityKeyMetadata) {
+	private static Map<String, Object> collectProperties(Relationship relationship, AssociationKey associationKey, AssociationKeyMetadata metadata) {
 		Map<String, Object> properties = new HashMap<String, Object>();
-		String[] rowKeyColumnNames = associationKey.getMetadata().getRowKeyColumnNames();
+		String[] rowKeyColumnNames = metadata.getRowKeyColumnNames();
 
-		Node ownerNode = findOwnerNode( relationship, associationKey );
-		Node targetNode = findTargetNode( relationship, associationKey, ownerNode );
+		Node ownerNode = findOwnerNode( relationship, associationKey, metadata );
+		Node targetNode = findTargetNode( relationship, metadata, ownerNode );
 
 		// Index columns
 		for ( int i = 0; i < rowKeyColumnNames.length; i++ ) {
@@ -51,11 +51,11 @@ public class Neo4jTupleAssociationSnapshot implements TupleSnapshot {
 		}
 
 		// Properties stored in the target side of the association
-		for ( String associationColumn : associatedEntityKeyMetadata.getAssociationKeyColumns() ) {
-			String targetColumnName = associatedEntityKeyMetadata.getCorrespondingEntityKeyColumn( associationColumn );
+		for ( String associationColumn : metadata.getAssociatedEntityKeyMetadata().getAssociationKeyColumns() ) {
+			String targetColumnName = metadata.getAssociatedEntityKeyMetadata().getCorrespondingEntityKeyColumn( associationColumn );
 			if ( isPartOfEmbedded( targetColumnName ) ) {
 				// Embedded column
-				String collectionRole = associationKey.getMetadata().getCollectionRole();
+				String collectionRole = metadata.getCollectionRole();
 				if ( targetColumnName.equals( collectionRole ) ) {
 					// Ex: @ElementCollection List<String> examples
 					targetColumnName = targetColumnName.substring( targetColumnName.lastIndexOf( "." ) + 1 );
@@ -111,8 +111,8 @@ public class Neo4jTupleAssociationSnapshot implements TupleSnapshot {
 		return properties;
 	}
 
-	private static Node findTargetNode(Relationship relationship, AssociationKey associationKey, Node ownerNode) {
-		if ( isEmbeddedCollection( associationKey ) ) {
+	private static Node findTargetNode(Relationship relationship, AssociationKeyMetadata metadata, Node ownerNode) {
+		if ( isEmbeddedCollection( metadata ) ) {
 			return relationship.getEndNode();
 		}
 		else {
@@ -120,9 +120,9 @@ public class Neo4jTupleAssociationSnapshot implements TupleSnapshot {
 		}
 	}
 
-	private static Node findOwnerNode(Relationship relationship, AssociationKey associationKey) {
-		if ( isEmbeddedCollection( associationKey ) ) {
-			String collectionRole = associationKey.getMetadata().getCollectionRole();
+	private static Node findOwnerNode(Relationship relationship, AssociationKey associationKey, AssociationKeyMetadata metadata) {
+		if ( isEmbeddedCollection( metadata ) ) {
+			String collectionRole = metadata.getCollectionRole();
 			return embeddedAssociationOwner( relationship, collectionRole );
 		}
 		else {
@@ -130,8 +130,8 @@ public class Neo4jTupleAssociationSnapshot implements TupleSnapshot {
 		}
 	}
 
-	private static boolean isEmbeddedCollection(AssociationKey associationKey) {
-		return associationKey.getMetadata().getAssociationKind() == AssociationKind.EMBEDDED_COLLECTION;
+	private static boolean isEmbeddedCollection(AssociationKeyMetadata metadata) {
+		return metadata.getAssociationKind() == AssociationKind.EMBEDDED_COLLECTION;
 	}
 
 	private static Node embeddedAssociationOwner(Relationship relationship, String collectionRole) {

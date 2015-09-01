@@ -10,6 +10,7 @@ package org.hibernate.ogm.datastore.redis.dialect.model.impl;
 import org.hibernate.ogm.datastore.document.association.spi.AssociationRows;
 import org.hibernate.ogm.datastore.document.impl.MapAssociationRowsHelpers;
 import org.hibernate.ogm.model.key.spi.AssociationKey;
+import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 import org.hibernate.ogm.model.spi.AssociationSnapshot;
 
 /**
@@ -26,8 +27,8 @@ public class RedisAssociationSnapshot extends AssociationRows {
 	 */
 	private final RedisAssociation redisAssociation;
 
-	public RedisAssociationSnapshot(RedisAssociation association, AssociationKey key) {
-		super( key, MapAssociationRowsHelpers.getRows( association.getRows(), key ), RedisAssociationRowFactory.INSTANCE );
+	public RedisAssociationSnapshot(RedisAssociation association, AssociationKey key, AssociationKeyMetadata metadata) {
+		super( key, metadata, MapAssociationRowsHelpers.getRows( association.getRows(), key, metadata ), RedisAssociationRowFactory.INSTANCE );
 		this.redisAssociation = association;
 	}
 

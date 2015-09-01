@@ -6,6 +6,8 @@
  */
 package org.hibernate.ogm.datastore.redis;
 
+import static org.hibernate.ogm.datastore.document.impl.DotPatternMapHelpers.getColumnSharedPrefixOfAssociatedEntityLink;
+
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,8 +56,6 @@ import com.lambdaworks.redis.KeyScanCursor;
 import com.lambdaworks.redis.RedisConnection;
 import com.lambdaworks.redis.ScanArgs;
 import com.lambdaworks.redis.protocol.LettuceCharsets;
-
-import static org.hibernate.ogm.datastore.document.impl.DotPatternMapHelpers.getColumnSharedPrefixOfAssociatedEntityLink;
 
 /**
  * Stores tuples and associations inside Redis.
@@ -234,17 +234,18 @@ public class RedisDialect extends BaseGridDialect implements MultigetGridDialect
 	public org.hibernate.ogm.model.spi.Association getAssociation(
 			AssociationKey key,
 			AssociationContext associationContext) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 		RedisAssociation redisAssociation = null;
 
-		if ( isStoredInEntityStructure( key.getMetadata(), associationContext.getAssociationTypeContext() ) ) {
+		if ( isStoredInEntityStructure( metadata, associationContext.getAssociationTypeContext() ) ) {
 			Entity owningEntity = getEmbeddingEntity( key );
 
 			if ( owningEntity != null && DotPatternMapHelpers.hasField(
 					owningEntity.getPropertiesAsHierarchy(),
-					key.getMetadata()
+					metadata
 							.getCollectionRole()
 			) ) {
-				redisAssociation = RedisAssociation.fromEmbeddedAssociation( owningEntity, key.getMetadata() );
+				redisAssociation = RedisAssociation.fromEmbeddedAssociation( owningEntity, metadata );
 			}
 		}
 		else {
@@ -257,7 +258,7 @@ public class RedisDialect extends BaseGridDialect implements MultigetGridDialect
 
 		return redisAssociation != null ? new org.hibernate.ogm.model.spi.Association(
 				new RedisAssociationSnapshot(
-						redisAssociation, key
+						redisAssociation, key, metadata
 				)
 		) : null;
 	}
@@ -266,16 +267,17 @@ public class RedisDialect extends BaseGridDialect implements MultigetGridDialect
 	public org.hibernate.ogm.model.spi.Association createAssociation(
 			AssociationKey key,
 			AssociationContext associationContext) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 		RedisAssociation redisAssociation;
 
-		if ( isStoredInEntityStructure( key.getMetadata(), associationContext.getAssociationTypeContext() ) ) {
+		if ( isStoredInEntityStructure( metadata, associationContext.getAssociationTypeContext() ) ) {
 			Entity owningEntity = getEmbeddingEntity( key );
 
 			if ( owningEntity == null ) {
 				owningEntity = storeEntity( key.getEntityKey(), new Entity(), associationContext );
 			}
 
-			redisAssociation = RedisAssociation.fromEmbeddedAssociation( owningEntity, key.getMetadata() );
+			redisAssociation = RedisAssociation.fromEmbeddedAssociation( owningEntity, metadata );
 		}
 		else {
 			Association association = new Association();
@@ -285,7 +287,8 @@ public class RedisDialect extends BaseGridDialect implements MultigetGridDialect
 		return new org.hibernate.ogm.model.spi.Association(
 				new RedisAssociationSnapshot(
 						redisAssociation,
-						key
+						key,
+						metadata
 				)
 		);
 	}
@@ -299,13 +302,14 @@ public class RedisDialect extends BaseGridDialect implements MultigetGridDialect
 	public void insertOrUpdateAssociation(
 			AssociationKey associationKey, org.hibernate.ogm.model.spi.Association association,
 			AssociationContext associationContext) {
-		Object rows = getAssociationRows( association, associationKey, associationContext );
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 
+		Object rows = getAssociationRows( association, associationKey, associationContext );
 		RedisAssociation redisAssociation = ( (RedisAssociationSnapshot) association.getSnapshot() ).getRedisAssociation();
 		redisAssociation.setRows( rows );
 
 		if ( isStoredInEntityStructure(
-				associationKey.getMetadata(),
+				metadata,
 				associationContext.getAssociationTypeContext()
 		) ) {
 
@@ -350,7 +354,7 @@ public class RedisDialect extends BaseGridDialect implements MultigetGridDialect
 			AssociationKey key,
 			AssociationContext associationContext) {
 
-
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 		boolean organizeByRowKey = DotPatternMapHelpers.organizeAssociationMapByRowKey(
 				association,
 				key,
@@ -359,14 +363,14 @@ public class RedisDialect extends BaseGridDialect implements MultigetGridDialect
 
 		// only in-entity maps can be mapped by row key to prevent huge external association maps
 		if ( isStoredInEntityStructure(
-				key.getMetadata(),
+				metadata,
 				associationContext.getAssociationTypeContext()
 		) && organizeByRowKey ) {
-			String rowKeyColumn = organizeByRowKey ? key.getMetadata().getRowKeyIndexColumnNames()[0] : null;
+			String rowKeyColumn = organizeByRowKey ? metadata.getRowKeyIndexColumnNames()[0] : null;
 			Map<String, Object> rows = new HashMap<>();
 
 			for ( RowKey rowKey : association.getKeys() ) {
-				Map<String, Object> row = (Map<String, Object>) getAssociationRow( association.get( rowKey ), key );
+				Map<String, Object> row = (Map<String, Object>) getAssociationRow( association.get( rowKey ), key, metadata );
 
 				String rowKeyValue = (String) row.remove( rowKeyColumn );
 
@@ -384,14 +388,14 @@ public class RedisDialect extends BaseGridDialect implements MultigetGridDialect
 
 		List<Object> rows = new ArrayList<Object>( association.size() );
 		for ( RowKey rowKey : association.getKeys() ) {
-			rows.add( getAssociationRow( association.get( rowKey ), key ) );
+			rows.add( getAssociationRow( association.get( rowKey ), key, metadata ) );
 		}
 
 		return rows;
 	}
 
-	private Object getAssociationRow(Tuple row, AssociationKey associationKey) {
-		String[] columnsToPersist = associationKey.getMetadata()
+	private Object getAssociationRow(Tuple row, AssociationKey association, AssociationKeyMetadata metadata ) {
+		String[] columnsToPersist = metadata
 				.getColumnsWithoutKeyColumns( row.getColumnNames() );
 
 		// return value itself if there is only a single column to store
@@ -399,7 +403,7 @@ public class RedisDialect extends BaseGridDialect implements MultigetGridDialect
 			return row.get( columnsToPersist[0] );
 		}
 		Entity rowObject = new Entity();
-		String prefix = getColumnSharedPrefixOfAssociatedEntityLink( associationKey );
+		String prefix = getColumnSharedPrefixOfAssociatedEntityLink( metadata );
 		for ( String column : columnsToPersist ) {
 			Object value = row.get( column );
 			if ( value != null ) {
@@ -413,11 +417,13 @@ public class RedisDialect extends BaseGridDialect implements MultigetGridDialect
 
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
-		if ( isStoredInEntityStructure( key.getMetadata(), associationContext.getAssociationTypeContext() ) ) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
+
+		if ( isStoredInEntityStructure( metadata, associationContext.getAssociationTypeContext() ) ) {
 			Entity owningEntity = getEmbeddingEntity( key );
 
 			if ( owningEntity != null ) {
-				owningEntity.removeAssociation( key.getMetadata().getCollectionRole() );
+				owningEntity.removeAssociation( metadata.getCollectionRole() );
 				storeEntity( key.getEntityKey(), owningEntity, associationContext );
 			}
 		}

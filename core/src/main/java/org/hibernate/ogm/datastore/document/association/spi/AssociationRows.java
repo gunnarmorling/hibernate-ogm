@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.ogm.model.key.spi.AssociationKey;
+import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 import org.hibernate.ogm.model.key.spi.RowKey;
 import org.hibernate.ogm.model.spi.AssociationSnapshot;
 import org.hibernate.ogm.model.spi.Tuple;
@@ -26,11 +27,11 @@ public class AssociationRows implements AssociationSnapshot {
 
 	private final Map<RowKey, AssociationRow<?>> rows;
 
-	public AssociationRows(AssociationKey associationKey, Collection<?> wrapped, AssociationRowFactory associationRowFactory) {
+	public AssociationRows(AssociationKey associationKey, AssociationKeyMetadata associationKeyMetadata, Collection<?> wrapped, AssociationRowFactory associationRowFactory) {
 		this.rows = newHashMap( wrapped.size() );
 
 		for ( Object object : wrapped ) {
-			AssociationRow<?> row = associationRowFactory.createAssociationRow( associationKey, object );
+			AssociationRow<?> row = associationRowFactory.createAssociationRow( associationKey, associationKeyMetadata, object );
 			rows.put( row.getKey(), row );
 		}
 	}

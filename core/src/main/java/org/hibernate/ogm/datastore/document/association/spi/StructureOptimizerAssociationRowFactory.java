@@ -9,6 +9,7 @@ package org.hibernate.ogm.datastore.document.association.spi;
 import org.hibernate.ogm.datastore.document.association.spi.AssociationRow.AssociationRowAccessor;
 import org.hibernate.ogm.datastore.document.association.spi.impl.DocumentHelpers;
 import org.hibernate.ogm.model.key.spi.AssociationKey;
+import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 import org.hibernate.ogm.util.impl.Contracts;
 
 /**
@@ -53,14 +54,14 @@ public abstract class StructureOptimizerAssociationRowFactory<R> implements Asso
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public AssociationRow<?> createAssociationRow(AssociationKey associationKey, Object row) {
+	public AssociationRow<?> createAssociationRow(AssociationKey associationKey, AssociationKeyMetadata associationKeyMetadata, Object row) {
 		R rowObject = null;
 
 		AssociationRowAccessor<R> accessor;
 		if ( associationRowType.isInstance( row ) ) {
 			// if the columns are only made of the embedded id columns, add back the embedded id property prefix
 			// { id1: "foo", id2: "bar" } becomes { embeddedid.id1: "foo", "embeddedid.id2: "bar" }
-			String[] associationKeyColumns = associationKey.getMetadata()
+			String[] associationKeyColumns = associationKeyMetadata
 					.getAssociatedEntityKeyMetadata()
 					.getAssociationKeyColumns();
 			String prefix = DocumentHelpers.getColumnSharedPrefix( associationKeyColumns );
@@ -70,12 +71,12 @@ public abstract class StructureOptimizerAssociationRowFactory<R> implements Asso
 		}
 		else {
 			accessor = getAssociationRowAccessor( null, null );
-			String columnName = associationKey.getMetadata().getSingleRowKeyColumnNotContainedInAssociationKey();
+			String columnName = associationKeyMetadata.getSingleRowKeyColumnNotContainedInAssociationKey();
 			Contracts.assertNotNull( columnName, "columnName" );
 			rowObject = getSingleColumnRow( columnName, row );
 		}
 
-		return new AssociationRow<R>( associationKey, accessor, rowObject );
+		return new AssociationRow<R>( associationKey, associationKeyMetadata, accessor, rowObject );
 	}
 
 	/**

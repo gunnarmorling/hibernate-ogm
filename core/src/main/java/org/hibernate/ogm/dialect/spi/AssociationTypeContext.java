@@ -7,6 +7,7 @@
 package org.hibernate.ogm.dialect.spi;
 
 import org.hibernate.ogm.model.key.spi.AssociatedEntityKeyMetadata;
+import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 import org.hibernate.ogm.model.spi.Association;
 import org.hibernate.ogm.options.spi.OptionsContext;
 
@@ -42,4 +43,6 @@ public interface AssociationTypeContext {
 	 * association.
 	 */
 	String getRoleOnMainSide();
+
+	AssociationKeyMetadata getAssociationKeyMetadata();
 }

@@ -138,7 +138,8 @@ public class LoadSelectedColumnsCollectionTest extends OgmTestCase {
 				.build();
 
 		AssociationKey associationKey = new AssociationKey(
-				metadata,
+				metadata.getTable(),
+				metadata.getColumnNames(),
 				new Object[] { "projectID" },
 				new EntityKey(
 						new DefaultEntityKeyMetadata( "Project", new String[] { "id" } ),
@@ -153,6 +154,7 @@ public class LoadSelectedColumnsCollectionTest extends OgmTestCase {
 								Project.class,
 								"modules"
 						),
+						metadata,
 						new DefaultAssociatedEntityKeyMetadata( null, null ),
 						null
 				),

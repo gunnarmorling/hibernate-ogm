@@ -14,6 +14,7 @@ import org.hibernate.ogm.dialect.impl.TupleContextImpl;
 import org.hibernate.ogm.dialect.spi.AssociationContext;
 import org.hibernate.ogm.dialect.spi.TupleContext;
 import org.hibernate.ogm.model.key.spi.AssociatedEntityKeyMetadata;
+import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 import org.hibernate.ogm.options.navigation.impl.OptionsContextImpl;
 import org.hibernate.ogm.options.navigation.source.impl.OptionValueSource;
 
@@ -36,10 +37,11 @@ public class GridDialectOperationContexts {
 		);
 	}
 
-	public static AssociationContext emptyAssociationContext() {
+	public static AssociationContext emptyAssociationContext(AssociationKeyMetadata associationKeyMetadata) {
 		return new AssociationContextImpl(
 				new AssociationTypeContextImpl(
 						OptionsContextImpl.forProperty( Collections.<OptionValueSource>emptyList(), Object.class, "" ),
+						associationKeyMetadata,
 						null,
 						null
 				),

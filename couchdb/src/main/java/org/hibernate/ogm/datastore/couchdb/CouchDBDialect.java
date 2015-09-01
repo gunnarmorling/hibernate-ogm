@@ -6,6 +6,8 @@
  */
 package org.hibernate.ogm.datastore.couchdb;
 
+import static org.hibernate.ogm.datastore.document.impl.DotPatternMapHelpers.getColumnSharedPrefixOfAssociatedEntityLink;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,8 +55,6 @@ import org.hibernate.ogm.type.spi.GridType;
 import org.hibernate.type.BinaryType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-
-import static org.hibernate.ogm.datastore.document.impl.DotPatternMapHelpers.getColumnSharedPrefixOfAssociatedEntityLink;
 
 /**
  * Stores tuples and associations as JSON documents inside CouchDB.
@@ -121,17 +121,18 @@ public class CouchDBDialect extends BaseGridDialect {
 
 	@Override
 	public Association getAssociation(AssociationKey key, AssociationContext associationContext) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 		CouchDBAssociation couchDBAssociation = null;
 
-		if ( isStoredInEntityStructure( key.getMetadata(), associationContext.getAssociationTypeContext() ) ) {
+		if ( isStoredInEntityStructure( metadata, associationContext.getAssociationTypeContext() ) ) {
 			EntityDocument owningEntity = getDataStore().getEntity( Identifier.createEntityId( key.getEntityKey() ) );
 
 			if ( owningEntity != null && DotPatternMapHelpers.hasField(
 					owningEntity.getPropertiesAsHierarchy(),
-					key.getMetadata()
+					metadata
 							.getCollectionRole()
 			) ) {
-				couchDBAssociation = CouchDBAssociation.fromEmbeddedAssociation( owningEntity, key.getMetadata() );
+				couchDBAssociation = CouchDBAssociation.fromEmbeddedAssociation( owningEntity, metadata );
 			}
 		}
 		else {
@@ -141,27 +142,28 @@ public class CouchDBDialect extends BaseGridDialect {
 			}
 		}
 
-		return couchDBAssociation != null ? new Association( new CouchDBAssociationSnapshot( couchDBAssociation, key ) ) : null;
+		return couchDBAssociation != null ? new Association( new CouchDBAssociationSnapshot( couchDBAssociation, key, metadata ) ) : null;
 	}
 
 	@Override
 	public Association createAssociation(AssociationKey key, AssociationContext associationContext) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 		CouchDBAssociation couchDBAssociation = null;
 
-		if ( isStoredInEntityStructure( key.getMetadata(), associationContext.getAssociationTypeContext() ) ) {
+		if ( isStoredInEntityStructure( metadata, associationContext.getAssociationTypeContext() ) ) {
 			EntityDocument owningEntity = getDataStore().getEntity( Identifier.createEntityId( key.getEntityKey() ) );
 			if ( owningEntity == null ) {
 				owningEntity = (EntityDocument) getDataStore().saveDocument( new EntityDocument( key.getEntityKey() ) );
 			}
 
-			couchDBAssociation = CouchDBAssociation.fromEmbeddedAssociation( owningEntity, key.getMetadata() );
+			couchDBAssociation = CouchDBAssociation.fromEmbeddedAssociation( owningEntity, metadata );
 		}
 		else {
 			AssociationDocument association = new AssociationDocument( Identifier.createAssociationId( key ) );
 			couchDBAssociation = CouchDBAssociation.fromAssociationDocument( association );
 		}
 
-		return new Association( new CouchDBAssociationSnapshot( couchDBAssociation, key ) );
+		return new Association( new CouchDBAssociationSnapshot( couchDBAssociation, key, metadata ) );
 	}
 
 	@Override
@@ -175,7 +177,7 @@ public class CouchDBDialect extends BaseGridDialect {
 	}
 
 	private Object getAssociationRows(Association association, AssociationKey associationKey, AssociationContext associationContext) {
-
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
 
 		boolean organizeByRowKey = DotPatternMapHelpers.organizeAssociationMapByRowKey(
 				association,
@@ -184,14 +186,14 @@ public class CouchDBDialect extends BaseGridDialect {
 		);
 
 		if ( isStoredInEntityStructure(
-				associationKey.getMetadata(),
+				metadata,
 				associationContext.getAssociationTypeContext()
 		) && organizeByRowKey ) {
-			String rowKeyColumn = organizeByRowKey ? associationKey.getMetadata().getRowKeyIndexColumnNames()[0] : null;
+			String rowKeyColumn = organizeByRowKey ? metadata.getRowKeyIndexColumnNames()[0] : null;
 			Map<String, Object> rows = new HashMap<>();
 
 			for ( RowKey rowKey : association.getKeys() ) {
-				Map<String, Object> row = (Map<String, Object>) getAssociationRow( association.get( rowKey ), associationKey );
+				Map<String, Object> row = (Map<String, Object>) getAssociationRow( association.get( rowKey ), associationKey,  metadata );
 
 				String rowKeyValue = (String) row.remove( rowKeyColumn );
 
@@ -209,14 +211,14 @@ public class CouchDBDialect extends BaseGridDialect {
 
 		List<Object> rows = new ArrayList<Object>( association.size() );
 		for ( RowKey rowKey : association.getKeys() ) {
-			rows.add( getAssociationRow( association.get( rowKey ), associationKey ) );
+			rows.add( getAssociationRow( association.get( rowKey ), associationKey, metadata ) );
 		}
 
 		return rows;
 	}
 
-	private Object getAssociationRow(Tuple row, AssociationKey associationKey) {
-		String[] columnsToPersist = associationKey.getMetadata()
+	private Object getAssociationRow(Tuple row, AssociationKey associationKey, AssociationKeyMetadata metadata) {
+		String[] columnsToPersist = metadata
 				.getColumnsWithoutKeyColumns( row.getColumnNames() );
 
 		// return value itself if there is only a single column to store
@@ -224,7 +226,7 @@ public class CouchDBDialect extends BaseGridDialect {
 			return row.get( columnsToPersist[0] );
 		}
 		EntityDocument rowObject = new EntityDocument();
-		String prefix = getColumnSharedPrefixOfAssociatedEntityLink( associationKey );
+		String prefix = getColumnSharedPrefixOfAssociatedEntityLink( metadata );
 		for ( String column : columnsToPersist ) {
 			Object value = row.get( column );
 			if ( value != null ) {
@@ -238,10 +240,12 @@ public class CouchDBDialect extends BaseGridDialect {
 
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
-		if ( isStoredInEntityStructure( key.getMetadata(), associationContext.getAssociationTypeContext() ) ) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
+
+		if ( isStoredInEntityStructure( metadata, associationContext.getAssociationTypeContext() ) ) {
 			EntityDocument owningEntity = getDataStore().getEntity( Identifier.createEntityId( key.getEntityKey() ) );
 			if ( owningEntity != null ) {
-				owningEntity.removeAssociation( key.getMetadata().getCollectionRole() );
+				owningEntity.removeAssociation( metadata.getCollectionRole() );
 				getDataStore().saveDocument( owningEntity );
 			}
 		}

@@ -716,6 +716,7 @@ public abstract class OgmEntityPersister extends AbstractEntityPersister impleme
 
 		AssociationTypeContext associationTypeContext = new AssociationTypeContextImpl(
 				serviceContext.getPropertyOptions( inversePersister.getMappedClass(), associationKeyMetadata.getCollectionRole() ),
+				associationKeyMetadata,
 				associationKeyMetadata.getAssociatedEntityKeyMetadata(),
 				getPropertyNames()[propertyIndex]
 		);
@@ -832,6 +833,7 @@ public abstract class OgmEntityPersister extends AbstractEntityPersister impleme
 
 
 	// TODO copied from AsbtactEntityPersister: change the visibility
+	@Override
 	public UniqueEntityLoader getAppropriateLoader(LockOptions lockOptions, SessionImplementor session) {
 //		if ( queryLoader != null ) {
 //			// if the user specified a custom query loader we need to that

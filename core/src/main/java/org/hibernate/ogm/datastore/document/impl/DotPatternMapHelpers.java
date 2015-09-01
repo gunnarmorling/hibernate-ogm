@@ -14,6 +14,7 @@ import org.hibernate.ogm.datastore.document.options.MapStorageType;
 import org.hibernate.ogm.datastore.document.options.spi.MapStorageOption;
 import org.hibernate.ogm.dialect.spi.AssociationContext;
 import org.hibernate.ogm.model.key.spi.AssociationKey;
+import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 
 /**
  * Provides functionality for dealing with (nested) fields of Map documents.
@@ -114,12 +115,14 @@ public class DotPatternMapHelpers {
 			return false;
 		}
 
-		if ( key.getMetadata().getRowKeyIndexColumnNames().length != 1 ) {
+		AssociationKeyMetadata metadata = associationContext.getAssociationTypeContext().getAssociationKeyMetadata();
+
+		if ( metadata.getRowKeyIndexColumnNames().length != 1 ) {
 			return false;
 		}
 
 		Object valueOfFirstRow = association.get( association.getKeys().iterator().next() )
-				.get( key.getMetadata().getRowKeyIndexColumnNames()[0] );
+				.get( metadata.getRowKeyIndexColumnNames()[0] );
 
 		if ( !( valueOfFirstRow instanceof String ) ) {
 			return false;
@@ -140,8 +143,8 @@ public class DotPatternMapHelpers {
 	 *
 	 * @return the shared prefix with a trailing dot (.) of the association columns or {@literal null}
 	 */
-	public static String getColumnSharedPrefixOfAssociatedEntityLink(AssociationKey associationKey) {
-		String[] associationKeyColumns = associationKey.getMetadata()
+	public static String getColumnSharedPrefixOfAssociatedEntityLink(AssociationKeyMetadata metadata) {
+		String[] associationKeyColumns = metadata
 				.getAssociatedEntityKeyMetadata()
 				.getAssociationKeyColumns();
 		// we used to check that columns are the same (in an ordered fashion)

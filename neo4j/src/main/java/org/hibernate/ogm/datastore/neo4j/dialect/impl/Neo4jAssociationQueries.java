@@ -208,12 +208,12 @@ public class Neo4jAssociationQueries extends QueriesBase {
 	 * @param rowKey represents a row in an association
 	 * @return the corresponding relationship
 	 */
-	public Relationship findRelationship(GraphDatabaseService executionEngine, AssociationKey associationKey, RowKey rowKey) {
+	public Relationship findRelationship(GraphDatabaseService executionEngine, AssociationKey associationKey, AssociationKeyMetadata metadata, RowKey rowKey) {
 		Object[] relationshipValues;
-		if ( associationKey.getMetadata().getRowKeyIndexColumnNames().length > 0 ) {
-			int length = associationKey.getMetadata().getRowKeyIndexColumnNames().length;
+		if ( metadata.getRowKeyIndexColumnNames().length > 0 ) {
+			int length = metadata.getRowKeyIndexColumnNames().length;
 			relationshipValues = new Object[length];
-			String[] indexColumnNames = associationKey.getMetadata().getRowKeyIndexColumnNames();
+			String[] indexColumnNames = metadata.getRowKeyIndexColumnNames();
 			for ( int i = 0; i < indexColumnNames.length; i++ ) {
 				for ( int j = 0; j < rowKey.getColumnNames().length; j++ ) {
 					if ( indexColumnNames[i].equals( rowKey.getColumnNames()[j] ) ) {
@@ -223,7 +223,7 @@ public class Neo4jAssociationQueries extends QueriesBase {
 			}
 		}
 		else {
-			relationshipValues = getEntityKey( associationKey, rowKey ).getColumnValues();
+			relationshipValues = getEntityKey( associationKey, metadata, rowKey ).getColumnValues();
 		}
 		Object[] queryValues = ArrayHelper.concat( associationKey.getEntityKey().getColumnValues(), relationshipValues );
 		Result result = executionEngine.execute( findRelationshipQuery, params( queryValues ) );
@@ -237,12 +237,12 @@ public class Neo4jAssociationQueries extends QueriesBase {
 	 * @param associationKey represents the association
 	 * @param rowKey represents a row in an association
 	 */
-	public void removeAssociationRow(GraphDatabaseService executionEngine, AssociationKey associationKey, RowKey rowKey) {
+	public void removeAssociationRow(GraphDatabaseService executionEngine, AssociationKey associationKey, AssociationKeyMetadata metadata, RowKey rowKey) {
 		Object[] relationshipValues;
-		if ( associationKey.getMetadata().getRowKeyIndexColumnNames().length > 0 ) {
-			int length = associationKey.getMetadata().getRowKeyIndexColumnNames().length;
+		if ( metadata.getRowKeyIndexColumnNames().length > 0 ) {
+			int length = metadata.getRowKeyIndexColumnNames().length;
 			relationshipValues = new Object[length];
-			String[] indexColumnNames = associationKey.getMetadata().getRowKeyIndexColumnNames();
+			String[] indexColumnNames = metadata.getRowKeyIndexColumnNames();
 			for ( int i = 0; i < indexColumnNames.length; i++ ) {
 				for ( int j = 0; j < rowKey.getColumnNames().length; j++ ) {
 					if ( indexColumnNames[i].equals( rowKey.getColumnNames()[j] ) ) {
@@ -252,7 +252,7 @@ public class Neo4jAssociationQueries extends QueriesBase {
 			}
 		}
 		else {
-			relationshipValues = getEntityKey( associationKey, rowKey ).getColumnValues();
+			relationshipValues = getEntityKey( associationKey, metadata, rowKey ).getColumnValues();
 		}
 		Object[] queryValues = ArrayHelper.concat( associationKey.getEntityKey().getColumnValues(), relationshipValues );
 		executionEngine.execute( removeAssociationRowQuery, params( queryValues ) );
@@ -265,8 +265,8 @@ public class Neo4jAssociationQueries extends QueriesBase {
 	 * Specifically, it may <b>not</b> be invoked if the association has index columns (maps, ordered collections), as
 	 * the entity key columns will not be part of the row key in this case.
 	 */
-	private EntityKey getEntityKey(AssociationKey associationKey, RowKey rowKey) {
-		String[] associationKeyColumns = associationKey.getMetadata().getAssociatedEntityKeyMetadata().getAssociationKeyColumns();
+	private EntityKey getEntityKey(AssociationKey associationKey, AssociationKeyMetadata metadata, RowKey rowKey) {
+		String[] associationKeyColumns = metadata.getAssociatedEntityKeyMetadata().getAssociationKeyColumns();
 		Object[] columnValues = new Object[associationKeyColumns.length];
 		int i = 0;
 
@@ -275,7 +275,7 @@ public class Neo4jAssociationQueries extends QueriesBase {
 			i++;
 		}
 
-		EntityKeyMetadata entityKeyMetadata = associationKey.getMetadata().getAssociatedEntityKeyMetadata().getEntityKeyMetadata();
+		EntityKeyMetadata entityKeyMetadata = metadata.getAssociatedEntityKeyMetadata().getEntityKeyMetadata();
 		return new EntityKey( entityKeyMetadata, columnValues );
 	}
 
@@ -292,14 +292,14 @@ public class Neo4jAssociationQueries extends QueriesBase {
 	 * @param embeddedKey the {@link EntityKey} identifying the embedded component
 	 * @return the created {@link Relationship} that represents the association
 	 */
-	public Relationship createRelationshipForEmbeddedAssociation(GraphDatabaseService executionEngine, AssociationKey associationKey, EntityKey embeddedKey) {
-		String query = initCreateEmbeddedAssociationQuery( associationKey, embeddedKey );
-		Object[] queryValues = createRelationshipForEmbeddedQueryValues( associationKey, embeddedKey );
+	public Relationship createRelationshipForEmbeddedAssociation(GraphDatabaseService executionEngine, AssociationKey associationKey, AssociationKeyMetadata metadata, EntityKey embeddedKey) {
+		String query = initCreateEmbeddedAssociationQuery( associationKey, metadata, embeddedKey );
+		Object[] queryValues = createRelationshipForEmbeddedQueryValues( associationKey, metadata, embeddedKey );
 		return executeQuery( executionEngine, query, queryValues );
 	}
 
-	private String initCreateEmbeddedAssociationQuery(AssociationKey associationKey, EntityKey embeddedKey) {
-		String collectionRole = associationKey.getMetadata().getCollectionRole();
+	private String initCreateEmbeddedAssociationQuery(AssociationKey associationKey, AssociationKeyMetadata metadata, EntityKey embeddedKey) {
+		String collectionRole = metadata.getCollectionRole();
 		String[] embeddedColumnNames = embeddedKey.getColumnNames();
 		Object[] embeddedColumnValues = embeddedKey.getColumnValues();
 		String[] columnNames = associationKey.getEntityKey().getMetadata().getColumnNames();
@@ -309,13 +309,13 @@ public class Neo4jAssociationQueries extends QueriesBase {
 			createRelationshipForCollectionOfPrimitivesOrMap( associationKey, collectionRole, columnNames, queryBuilder );
 		}
 		else {
-			createRelationshipforCollectionOfComponents( associationKey, collectionRole, embeddedColumnNames, embeddedColumnValues, queryBuilder );
+			createRelationshipforCollectionOfComponents( associationKey, metadata, embeddedColumnNames, embeddedColumnValues, queryBuilder );
 		}
 		return queryBuilder.toString();
 	}
 
-	private Object[] createRelationshipForEmbeddedQueryValues(AssociationKey associationKey, EntityKey embeddedKey) {
-		String collectionRole = associationKey.getMetadata().getCollectionRole();
+	private Object[] createRelationshipForEmbeddedQueryValues(AssociationKey associationKey, AssociationKeyMetadata metadata, EntityKey embeddedKey) {
+		String collectionRole = metadata.getCollectionRole();
 		Object[] columnValues = associationKey.getEntityKey().getColumnValues();
 		if ( isCollectionOfPrimitives( collectionRole, embeddedKey.getColumnNames() ) ) {
 			return ArrayHelper.concat( columnValues, embeddedKey.getColumnValues()[0] );
@@ -339,8 +339,10 @@ public class Neo4jAssociationQueries extends QueriesBase {
 	 * MATCH (owner:ENTITY:StoryGame {id: {0}}) - [:goodBranch] -> (e:EMBEDDED)
 	 * CREATE (e) -[r:additionalEndings]-> (target:EMBEDDED:`StoryGame_goodBranch.additionalEndings` {score: {1}, text: {2}})
 	 */
-	private void createRelationshipforCollectionOfComponents(AssociationKey associationKey, String collectionRole, String[] embeddedColumnNames, Object[] embeddedColumnValues, StringBuilder queryBuilder) {
+	private void createRelationshipforCollectionOfComponents(AssociationKey associationKey, AssociationKeyMetadata metadata, String[] embeddedColumnNames, Object[] embeddedColumnValues, StringBuilder queryBuilder) {
 		int offset = associationKey.getEntityKey().getColumnNames().length;
+		String collectionRole = metadata.getCollectionRole();
+
 		EmbeddedNodesTree tree = createEmbeddedTree( collectionRole, embeddedColumnNames, embeddedColumnValues, offset );
 		if ( isPartOfEmbedded( collectionRole ) ) {
 			String[] pathToEmbedded = appendEmbeddedNodes( collectionRole, queryBuilder );
@@ -355,7 +357,7 @@ public class Neo4jAssociationQueries extends QueriesBase {
 		queryBuilder.append( "(target:" );
 		queryBuilder.append( EMBEDDED );
 		queryBuilder.append( ":" );
-		escapeIdentifier( queryBuilder, associationKey.getMetadata().getAssociatedEntityKeyMetadata().getEntityKeyMetadata().getTable() );
+		escapeIdentifier( queryBuilder, metadata.getAssociatedEntityKeyMetadata().getEntityKeyMetadata().getTable() );
 		int index = 0;
 		int embeddedNumber = 0;
 

@@ -24,6 +24,10 @@ import org.hibernate.ogm.datastore.infinispan.InfinispanDialect;
 import org.hibernate.ogm.datastore.infinispan.InfinispanProperties;
 import org.hibernate.ogm.datastore.infinispan.impl.InfinispanDatastoreProvider;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
+import org.hibernate.ogm.dialect.impl.AssociationContextImpl;
+import org.hibernate.ogm.dialect.impl.AssociationTypeContextImpl;
+import org.hibernate.ogm.dialect.spi.AssociationContext;
+import org.hibernate.ogm.dialect.spi.AssociationTypeContext;
 import org.hibernate.ogm.dialect.spi.ModelConsumer;
 import org.hibernate.ogm.dialect.spi.NextValueRequest;
 import org.hibernate.ogm.id.spi.PersistentNoSqlIdentifierGenerator;
@@ -128,19 +132,22 @@ public class InfinispanDialectWithClusteredConfigurationTest {
 				.associatedEntityKeyMetadata( new DefaultAssociatedEntityKeyMetadata( null, null ) ).build();
 		Object[] values = { 123, "Hello", 456L };
 
-		AssociationKey key = new AssociationKey( keyMetadata, values, null );
+		AssociationKey key = new AssociationKey( keyMetadata.getTable(), columnNames, values, null );
 
 		RowKey rowKey = new RowKey( columnNames, values );
 		Tuple tuple = new Tuple();
 		tuple.put( "zip", "zap" );
 
+		AssociationTypeContext typeContext = new AssociationTypeContextImpl( null, keyMetadata, null, null );
+		AssociationContext context = new AssociationContextImpl( typeContext, null );
+
 		// when
-		Association association = dialect1.createAssociation( key, null );
+		Association association = dialect1.createAssociation( key, context );
 		association.put( rowKey, tuple );
 		dialect1.insertOrUpdateAssociation( key, association, null );
 
 		// then
-		Association readAssociation = dialect2.getAssociation( key, null );
+		Association readAssociation = dialect2.getAssociation( key, context );
 		Tuple readKey = readAssociation.get( rowKey );
 		assertThat( readKey ).isNotNull();
 		assertThat( readKey.get( "zip" ) ).isEqualTo( "zap" );

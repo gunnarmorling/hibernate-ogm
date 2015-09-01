@@ -17,6 +17,7 @@ import org.hibernate.ogm.datastore.document.association.spi.AssociationRows;
 import org.hibernate.ogm.datastore.document.association.spi.impl.DocumentHelpers;
 import org.hibernate.ogm.datastore.mongodb.MongoDBDialect;
 import org.hibernate.ogm.model.key.spi.AssociationKey;
+import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 import org.hibernate.ogm.model.key.spi.AssociationType;
 
 import com.mongodb.BasicDBObject;
@@ -35,8 +36,8 @@ public class MongoDBAssociationSnapshot extends AssociationRows {
 
 	private final DBObject dbObject;
 
-	public MongoDBAssociationSnapshot(DBObject document, AssociationKey associationKey, AssociationStorageStrategy storageStrategy) {
-		super( associationKey, getRows( document, associationKey, storageStrategy ), MongoDBAssociationRowFactory.INSTANCE );
+	public MongoDBAssociationSnapshot(DBObject document, AssociationKey associationKey, AssociationKeyMetadata metadata, AssociationStorageStrategy storageStrategy) {
+		super( associationKey, metadata, getRows( document, associationKey, metadata, storageStrategy ),MongoDBAssociationRowFactory.INSTANCE );
 		this.dbObject = document;
 	}
 
@@ -47,11 +48,11 @@ public class MongoDBAssociationSnapshot extends AssociationRows {
 		return query;
 	}
 
-	private static Collection<?> getRows(DBObject document, AssociationKey associationKey, AssociationStorageStrategy storageStrategy) {
+	private static Collection<?> getRows(DBObject document, AssociationKey associationKey, AssociationKeyMetadata metadata, AssociationStorageStrategy storageStrategy) {
 		Collection<?> rows = null;
 
-		if ( associationKey.getMetadata().getAssociationType() == AssociationType.ONE_TO_ONE ) {
-			Object oneToOneValue = getValueOrNull( document, associationKey.getMetadata().getCollectionRole(), Object.class );
+		if ( metadata.getAssociationType() == AssociationType.ONE_TO_ONE ) {
+			Object oneToOneValue = getValueOrNull( document, metadata.getCollectionRole(), Object.class );
 			if ( oneToOneValue != null ) {
 				rows = Collections.singletonList( oneToOneValue );
 			}
@@ -60,7 +61,7 @@ public class MongoDBAssociationSnapshot extends AssociationRows {
 			Object toManyValue;
 
 			if ( storageStrategy == AssociationStorageStrategy.IN_ENTITY ) {
-				toManyValue = getValueOrNull( document, associationKey.getMetadata().getCollectionRole() );
+				toManyValue = getValueOrNull( document, metadata.getCollectionRole() );
 			}
 			else {
 				toManyValue = document.get( MongoDBDialect.ROWS_FIELDNAME );
@@ -72,7 +73,7 @@ public class MongoDBAssociationSnapshot extends AssociationRows {
 			}
 			// a map-typed association, rows are organized by row key
 			else if ( toManyValue instanceof DBObject ) {
-				rows = getRowsFromMapAssociation( associationKey, (DBObject) toManyValue );
+				rows = getRowsFromMapAssociation( associationKey, metadata, (DBObject) toManyValue );
 			}
 		}
 
@@ -84,11 +85,11 @@ public class MongoDBAssociationSnapshot extends AssociationRows {
 	 * transformed into [{ 'addressType='home', 'address_id'=123}, { 'addressType='work', 'address_id'=456} ]) as
 	 * expected by the row accessor.
 	 */
-	private static Collection<?> getRowsFromMapAssociation(AssociationKey associationKey, DBObject value) {
-		String rowKeyIndexColumn = associationKey.getMetadata().getRowKeyIndexColumnNames()[0];
+	private static Collection<?> getRowsFromMapAssociation(AssociationKey associationKey, AssociationKeyMetadata metadata, DBObject value) {
+		String rowKeyIndexColumn = metadata.getRowKeyIndexColumnNames()[0];
 		List<DBObject> rows = new ArrayList<DBObject>();
 
-		String[] associationKeyColumns = associationKey.getMetadata()
+		String[] associationKeyColumns = metadata
 				.getAssociatedEntityKeyMetadata()
 				.getAssociationKeyColumns();
 
@@ -96,7 +97,7 @@ public class MongoDBAssociationSnapshot extends AssociationRows {
 		String prefix = DocumentHelpers.getColumnSharedPrefix( associationKeyColumns );
 		prefix = prefix == null ? "" : prefix + ".";
 
-		String embeddedValueColumnPrefix = associationKey.getMetadata().getCollectionRole() + EMBEDDABLE_COLUMN_PREFIX;
+		String embeddedValueColumnPrefix = metadata.getCollectionRole() + EMBEDDABLE_COLUMN_PREFIX;
 
 		// restore the list representation
 		for ( String rowKey : value.keySet() ) {
@@ -108,12 +109,12 @@ public class MongoDBAssociationSnapshot extends AssociationRows {
 
 			// several value columns, copy them all
 			if ( mapRow instanceof DBObject ) {
-				for ( String column : associationKey.getMetadata().getAssociatedEntityKeyMetadata().getAssociationKeyColumns() ) {
+				for ( String column : metadata.getAssociatedEntityKeyMetadata().getAssociationKeyColumns() ) {
 					// The column is part of an element collection; Restore the "value" node in the hierarchy
 					if ( column.startsWith( embeddedValueColumnPrefix ) ) {
 						MongoHelpers.setValue(
 								row,
-								column.substring( associationKey.getMetadata().getCollectionRole().length() + 1 ),
+								column.substring( metadata.getCollectionRole().length() + 1 ),
 								( (DBObject) mapRow ).get( column.substring( embeddedValueColumnPrefix.length() ) )
 						);
 					}
@@ -127,7 +128,7 @@ public class MongoDBAssociationSnapshot extends AssociationRows {
 			}
 			// single value column
 			else {
-				row.put( associationKey.getMetadata().getAssociatedEntityKeyMetadata().getAssociationKeyColumns()[0], mapRow );
+				row.put( metadata.getAssociatedEntityKeyMetadata().getAssociationKeyColumns()[0], mapRow );
 			}
 
 			rows.add( row );

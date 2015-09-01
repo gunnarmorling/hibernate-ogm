@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.ogm.model.key.spi.AssociationKey;
+import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 import org.hibernate.ogm.model.key.spi.RowKey;
 import org.hibernate.ogm.model.spi.TupleSnapshot;
 
@@ -45,19 +46,21 @@ public class AssociationRow<R> implements TupleSnapshot {
 	}
 
 	private final AssociationKey associationKey;
+	private final AssociationKeyMetadata associationKeyMetadata;
 	private final AssociationRowAccessor<R> accessor;
 	private final R row;
 
 	private final Set<String> columnNames;
 	private final RowKey rowKey;
 
-	public AssociationRow(AssociationKey associationKey, AssociationRowAccessor<R> accessor, R row) {
+	public AssociationRow(AssociationKey associationKey, AssociationKeyMetadata associationKeyMetadata, AssociationRowAccessor<R> accessor, R row) {
 		this.associationKey = associationKey;
+		this.associationKeyMetadata = associationKeyMetadata;
 		this.accessor = accessor;
 		this.row = row;
 
 		this.columnNames = Collections.unmodifiableSet( buildColumnNames( associationKey, accessor.getColumnNames( row ) ) );
-		this.rowKey = buildRowKey( associationKey, row, accessor );
+		this.rowKey = buildRowKey( associationKey, associationKeyMetadata, row, accessor );
 	}
 
 	private static Set<String> buildColumnNames(AssociationKey associationKey, Set<String> columnsFromRow) {
@@ -71,13 +74,13 @@ public class AssociationRow<R> implements TupleSnapshot {
 	 * Creates the row key of the given association row; columns present in the given association key will be obtained
 	 * from there, all other columns from the given native association row.
 	 */
-	private static <R> RowKey buildRowKey(AssociationKey associationKey, R row, AssociationRowAccessor<R> accessor) {
-		String[] columnNames = associationKey.getMetadata().getRowKeyColumnNames();
+	private static <R> RowKey buildRowKey(AssociationKey associationKey, AssociationKeyMetadata associationKeyMetadata, R row, AssociationRowAccessor<R> accessor) {
+		String[] columnNames = associationKeyMetadata.getRowKeyColumnNames();
 		Object[] columnValues = new Object[columnNames.length];
 
 		for ( int i = 0; i < columnNames.length; i++ ) {
 			String columnName = columnNames[i];
-			columnValues[i] = associationKey.getMetadata().isKeyColumn( columnName ) ? associationKey.getColumnValue( columnName ) : accessor.get( row, columnName );
+			columnValues[i] = associationKeyMetadata.isKeyColumn( columnName ) ? associationKey.getColumnValue( columnName ) : accessor.get( row, columnName );
 		}
 
 		return new RowKey( columnNames, columnValues );
@@ -85,7 +88,7 @@ public class AssociationRow<R> implements TupleSnapshot {
 
 	@Override
 	public Object get(String column) {
-		return associationKey.getMetadata().isKeyColumn( column ) ? associationKey.getColumnValue( column ) : accessor.get( row, column );
+		return associationKeyMetadata.isKeyColumn( column ) ? associationKey.getColumnValue( column ) : accessor.get( row, column );
 	}
 
 	@Override
