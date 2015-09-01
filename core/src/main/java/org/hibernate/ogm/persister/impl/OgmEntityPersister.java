@@ -717,7 +717,6 @@ public abstract class OgmEntityPersister extends AbstractEntityPersister impleme
 		AssociationTypeContext associationTypeContext = new AssociationTypeContextImpl(
 				serviceContext.getPropertyOptions( inversePersister.getMappedClass(), associationKeyMetadata.getCollectionRole() ),
 				associationKeyMetadata,
-				associationKeyMetadata.getAssociatedEntityKeyMetadata(),
 				getPropertyNames()[propertyIndex]
 		);
 

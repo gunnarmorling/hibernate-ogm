@@ -155,7 +155,6 @@ public class LoadSelectedColumnsCollectionTest extends OgmTestCase {
 								"modules"
 						),
 						metadata,
-						new DefaultAssociatedEntityKeyMetadata( null, null ),
 						null
 				),
 				new Tuple( new MongoDBTupleSnapshot( null, null, null ) )

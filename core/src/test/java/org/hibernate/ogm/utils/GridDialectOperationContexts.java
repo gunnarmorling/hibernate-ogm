@@ -42,7 +42,6 @@ public class GridDialectOperationContexts {
 				new AssociationTypeContextImpl(
 						OptionsContextImpl.forProperty( Collections.<OptionValueSource>emptyList(), Object.class, "" ),
 						associationKeyMetadata,
-						null,
 						null
 				),
 				null

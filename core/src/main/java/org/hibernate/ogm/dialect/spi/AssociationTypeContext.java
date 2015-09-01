@@ -6,7 +6,6 @@
  */
 package org.hibernate.ogm.dialect.spi;
 
-import org.hibernate.ogm.model.key.spi.AssociatedEntityKeyMetadata;
 import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
 import org.hibernate.ogm.model.spi.Association;
 import org.hibernate.ogm.options.spi.OptionsContext;
@@ -26,13 +25,6 @@ public interface AssociationTypeContext {
 	 * @return a context object providing access to the options effectively applying for a given entity or property.
 	 */
 	OptionsContext getOptionsContext();
-
-	/**
-	 * Provides meta-data about the entity key on the other side of this association.
-	 *
-	 * @return A meta-data object providing information about the entity key on the other side of this information.
-	 */
-	AssociatedEntityKeyMetadata getAssociatedEntityKeyMetadata();
 
 	/**
 	 * Provides the role of the represented association on the main side in case the current operation is invoked for

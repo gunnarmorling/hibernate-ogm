@@ -138,7 +138,7 @@ public class InfinispanDialectWithClusteredConfigurationTest {
 		Tuple tuple = new Tuple();
 		tuple.put( "zip", "zap" );
 
-		AssociationTypeContext typeContext = new AssociationTypeContextImpl( null, keyMetadata, null, null );
+		AssociationTypeContext typeContext = new AssociationTypeContextImpl( null, keyMetadata, null );
 		AssociationContext context = new AssociationContextImpl( typeContext, null );
 
 		// when
