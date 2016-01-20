@@ -8,6 +8,8 @@ package org.hibernate.ogm.datastore.mongodb.test.mapping;
 
 import static org.hibernate.ogm.datastore.mongodb.utils.MongoDBTestHelper.assertDbObject;
 
+import java.util.List;
+
 import org.hibernate.Transaction;
 import org.hibernate.ogm.OgmSession;
 import org.hibernate.ogm.backendtck.type.Bookmark;
@@ -24,6 +26,7 @@ import org.junit.Test;
 public class BuiltinTypeMappingTest extends OgmTestCase {
 
 	private String bookmarkId;
+	private String bookmarkId2;
 
 	@Before
 	public void setUpTestData() {
@@ -37,10 +40,23 @@ public class BuiltinTypeMappingTest extends OgmTestCase {
 		bookmark.setShared( true );
 
 		session.persist( bookmark );
+
+		Bookmark bookmark2 = new Bookmark();
+		bookmark2.setFavourite( Boolean.TRUE );
+		bookmark2.setPrivate( true );
+		bookmark2.setRead( true );
+		bookmark2.setShared( true );
+
+		session.persist( bookmark2 );
+
 		transaction.commit();
+
+
+
 		session.close();
 
 		this.bookmarkId = bookmark.getId();
+		this.bookmarkId2 = bookmark2.getId();
 	}
 
 	@After
@@ -49,6 +65,19 @@ public class BuiltinTypeMappingTest extends OgmTestCase {
 		Transaction transaction = session.beginTransaction();
 
 		session.delete( session.get( Bookmark.class, bookmarkId ) );
+
+		transaction.commit();
+		session.close();
+	}
+
+	@Test
+	public void multiload() {
+		OgmSession session = openSession();
+		Transaction transaction = session.beginTransaction();
+
+		List<Bookmark> bookmarks = session.byMultipleIds( Bookmark.class )
+			.multiLoad( bookmarkId, bookmarkId2 );
+		System.out.println(  bookmarks );
 
 		transaction.commit();
 		session.close();

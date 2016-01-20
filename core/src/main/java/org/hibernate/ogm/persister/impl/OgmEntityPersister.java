@@ -23,7 +23,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -627,10 +627,10 @@ public abstract class OgmEntityPersister extends AbstractEntityPersister impleme
 			Object ce = getCacheAccessStrategy().get( session, cacheKey, session.getTimestamp() );
 			if ( ce != null ) {
 				CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( ce, getFactory() );
-				if ( !cacheEntry.areLazyPropertiesUnfetched() ) {
-					// note early exit here:
-					return initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
-				}
+//				if ( !cacheEntry.areLazyPropertiesUnfetched() ) {
+//					// note early exit here:
+//					return initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
+//				}
 			}
 		}
 
