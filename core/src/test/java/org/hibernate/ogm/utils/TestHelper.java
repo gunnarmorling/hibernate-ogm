@@ -25,7 +25,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.ogm.OgmSessionFactory;
@@ -208,7 +207,6 @@ public class TestHelper {
 		Map<String, String> settings = new HashMap<>();
 
 		settings.put( OgmProperties.ENABLED, "true" );
-		settings.put( Environment.HBM2DDL_AUTO, "none" );
 		settings.put( "hibernate.search.default.directory_provider", "ram" );
 
 		Map<String, String> environmentProperties = helper.getEnvironmentProperties();

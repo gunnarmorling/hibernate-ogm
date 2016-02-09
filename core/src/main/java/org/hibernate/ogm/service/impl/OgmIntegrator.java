@@ -51,7 +51,6 @@ public class OgmIntegrator implements Integrator {
 		}
 		Version.touch();
 
-		sessionFactory.addObserver( new SchemaDefiningObserver( metadata ) );
 		sessionFactory.addObserver( new SessionFactoryLifecycleAwareDialectInitializer() );
 
 		attachEventContextManagingListenersIfRequired( serviceRegistry );
