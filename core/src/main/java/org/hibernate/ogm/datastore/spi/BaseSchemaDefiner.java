@@ -6,6 +6,8 @@
  */
 package org.hibernate.ogm.datastore.spi;
 
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Default implementation of {@link SchemaDefiner}. Specific implementations can override those hooks they're
@@ -13,7 +15,7 @@ package org.hibernate.ogm.datastore.spi;
  *
  * @author Gunnar Morling
  */
-public class BaseSchemaDefiner implements SchemaDefiner {
+public class BaseSchemaDefiner<T> implements SchemaDefiner<T> {
 
 	@Override
 	public void validateMapping(SchemaDefinitionContext context) {
@@ -23,5 +25,15 @@ public class BaseSchemaDefiner implements SchemaDefiner {
 	@Override
 	public void initializeSchema(SchemaDefinitionContext context) {
 		// No-op
+	}
+
+	@Override
+	public List<T> getCreateCommands(SchemaDefinitionContext context) {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<T> getDropCommands(SchemaDefinitionContext context) {
+		return Collections.emptyList();
 	}
 }

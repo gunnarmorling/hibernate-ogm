@@ -31,7 +31,7 @@ import org.hibernate.type.Type;
  *
  * @author Jonathan Halliday
  */
-public class CassandraSchemaDefiner extends BaseSchemaDefiner {
+public class CassandraSchemaDefiner extends BaseSchemaDefiner<String> {
 
 	private static final Log LOG = LoggerFactory.getLogger();
 
@@ -125,5 +125,45 @@ public class CassandraSchemaDefiner extends BaseSchemaDefiner {
 		if ( columns.hasNext() ) {
 			LOG.multiColumnIndexNotSupported( table.getName(), sourceName );
 		}
+	}
+
+	@Override
+	public List<String> getCreateCommands(org.hibernate.ogm.datastore.spi.SchemaDefiner.SchemaDefinitionContext context) {
+		List<String> commands = new ArrayList<>();
+
+		if ( context.createNamespace() ) {
+			for ( Namespace namespace : context.getDatabase().getNamespaces() ) {
+				String command = "CREATE KEYSPACE IF NOT EXISTS " +
+						namespace.getPhysicalName().getSchema().render() +
+						" WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1 }";
+
+				commands.add( command );
+			}
+		}
+
+		return commands;
+	}
+
+	@Override
+	public List<String> getDropCommands(SchemaDefinitionContext context) {
+		List<String> commands = new ArrayList<>();
+
+		for ( Namespace namespace : context.getDatabase().getNamespaces() ) {
+			for ( Table table : namespace.getTables() ) {
+				if ( table.isPhysicalTable() ) {
+					String command = "DROP TABLE IF EXISTS " + table.getName();
+					commands.add( command );
+				}
+			}
+		}
+
+		if ( context.createNamespace() ) {
+			for ( Namespace namespace : context.getDatabase().getNamespaces() ) {
+				String command = "DROP KEYSPACE IF EXISTS " + namespace.getPhysicalName().getSchema().render();
+				commands.add( command );
+			}
+		}
+
+		return commands;
 	}
 }

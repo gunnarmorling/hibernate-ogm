@@ -174,8 +174,8 @@ public class CassandraTestHelper implements TestableGridDialect {
 
 	@Override
 	public void dropSchemaAndDatabase(SessionFactory sessionFactory) {
-		CassandraDatastoreProvider cassandraDatastoreProvider = getProvider( sessionFactory );
-		cassandraDatastoreProvider.removeKeyspace();
+//		CassandraDatastoreProvider cassandraDatastoreProvider = getProvider( sessionFactory );
+//		cassandraDatastoreProvider.removeKeyspace();
 	}
 
 	@Override
@@ -273,13 +273,13 @@ public class CassandraTestHelper implements TestableGridDialect {
 	 */
 	public static class RowAssertionBuilder {
 
-		private OgmSessionFactory sessionFactory;
+		private final OgmSessionFactory sessionFactory;
 
-		private String table;
+		private final String table;
 
-		private Map<String, Object> keyColumns;
+		private final Map<String, Object> keyColumns;
 
-		private Map<String, Object> expectedColumns;
+		private final Map<String, Object> expectedColumns;
 
 		private boolean partial;
 

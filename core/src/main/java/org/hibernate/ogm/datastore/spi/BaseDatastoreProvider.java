@@ -15,7 +15,7 @@ import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
  * @author Gunnar Morling
  *
  */
-public abstract class BaseDatastoreProvider implements DatastoreProvider {
+public abstract class BaseDatastoreProvider<T> implements DatastoreProvider<T> {
 
 	@Override
 	public Class<? extends QueryParserService> getDefaultQueryParserServiceType() {
@@ -23,8 +23,11 @@ public abstract class BaseDatastoreProvider implements DatastoreProvider {
 	}
 
 	@Override
-	public Class<? extends SchemaDefiner> getSchemaDefinerType() {
-		return BaseSchemaDefiner.class;
+	public Class<? extends SchemaDefiner<T>> getSchemaDefinerType() {
+		@SuppressWarnings("unchecked")
+		Class<? extends SchemaDefiner<T>> definerType = (Class<? extends SchemaDefiner<T>>) BaseSchemaDefiner.class;
+
+		return definerType;
 	}
 
 	@Override
@@ -35,5 +38,9 @@ public abstract class BaseDatastoreProvider implements DatastoreProvider {
 	@Override
 	public TransactionCoordinatorBuilder getTransactionCoordinatorBuilder(TransactionCoordinatorBuilder coordinatorBuilder) {
 		return coordinatorBuilder;
+	}
+
+	@Override
+	public void executeDdlCommands(Iterable<T> commands) {
 	}
 }

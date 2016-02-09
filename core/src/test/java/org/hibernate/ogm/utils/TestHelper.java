@@ -55,7 +55,7 @@ public class TestHelper {
 	private static final String TX_CONTROL_CLASS_NAME = "com.arjuna.ats.arjuna.coordinator.TxControl";
 	private static final GridModule GRID_MODULE = determineGridModule();
 	private static final TestableGridDialect helper = instantiate( GRID_MODULE.loadTestableGridDialectClass() );
-	private static final GridDialectType GRID_DIALECT_TYPE = determineGridDialectType();
+//	private static final GridDialectType GRID_DIALECT_TYPE = determineGridDialectType();
 
 	static {
 		Class<?> txControlClass = loadClass( TX_CONTROL_CLASS_NAME );
@@ -123,7 +123,8 @@ public class TestHelper {
 	}
 
 	public static GridDialectType getCurrentDialectType() {
-		return GRID_DIALECT_TYPE;
+		return null;
+//		return GRID_DIALECT_TYPE;
 	}
 
 	public static AvailableDatastoreProvider getCurrentDatastoreProvider() {

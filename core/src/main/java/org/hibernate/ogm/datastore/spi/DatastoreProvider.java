@@ -22,7 +22,7 @@ import org.hibernate.service.Service;
  * @author Emmanuel Bernard &lt;emmanuel@hibernate.org&gt;
  * @author Gunnar Morling
  */
-public interface DatastoreProvider extends Service {
+public interface DatastoreProvider<T> extends Service {
 
 	/**
 	 * Returns the {@link GridDialect} type for the underlying datastore.
@@ -46,7 +46,7 @@ public interface DatastoreProvider extends Service {
 	 *
 	 * @return the schema definer type
 	 */
-	Class<? extends SchemaDefiner> getSchemaDefinerType();
+	Class<? extends SchemaDefiner<T>> getSchemaDefinerType();
 
 	/**
 	 * Whether the underlying datastore allows emulation of transactions.
@@ -69,4 +69,6 @@ public interface DatastoreProvider extends Service {
 	 * @return the same {@link TransactionCoordinatorBuilder}, or a new one if database needs additional functionalities.
 	 */
 	TransactionCoordinatorBuilder getTransactionCoordinatorBuilder(TransactionCoordinatorBuilder coordinatorBuilder);
+
+	public void executeDdlCommands(Iterable<T> commands);
 }

@@ -31,10 +31,12 @@ public class DefaultSchemaInitializationContext implements SchemaDefiner.SchemaD
 
 	private final Database database;
 	private final SessionFactoryImplementor factory;
+	private final boolean createNamespace;
 
-	public DefaultSchemaInitializationContext(Database database, SessionFactoryImplementor factory) {
+	public DefaultSchemaInitializationContext(Database database, SessionFactoryImplementor factory, boolean createNamespace) {
 		this.database = database;
 		this.factory = factory;
+		this.createNamespace = createNamespace;
 	}
 
 	@Override
@@ -103,5 +105,10 @@ public class DefaultSchemaInitializationContext implements SchemaDefiner.SchemaD
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		return factory;
+	}
+
+	@Override
+	public boolean createNamespace() {
+		return createNamespace;
 	}
 }

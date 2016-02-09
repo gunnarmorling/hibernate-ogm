@@ -6,12 +6,15 @@
  */
 package org.hibernate.ogm.schema.impl;
 
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.ogm.datastore.spi.DatastoreProvider;
 import org.hibernate.ogm.datastore.spi.SchemaDefiner;
 import org.hibernate.ogm.service.impl.DefaultSchemaInitializationContext;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
@@ -53,7 +56,7 @@ public class NoSqlSchemaManagementTool implements SchemaManagementTool {
 
 	@Override
 	public SchemaDropper getSchemaDropper(Map options) {
-		return new SchemaDropperImpl();
+		return new SchemaDropperImpl( factory );
 	}
 
 	@Override
@@ -66,7 +69,7 @@ public class NoSqlSchemaManagementTool implements SchemaManagementTool {
 		return null;
 	}
 
-	private static class SchemaCreatorImpl implements SchemaCreator {
+	private static class SchemaCreatorImpl<T> implements SchemaCreator {
 
 		private final SessionFactoryImplementor factory;
 
@@ -85,28 +88,91 @@ public class NoSqlSchemaManagementTool implements SchemaManagementTool {
 			}
 
 			ServiceRegistryImplementor registry = factory.getServiceRegistry();
-			SchemaDefiner schemaInitializer = registry.getService( SchemaDefiner.class );
+
+			@SuppressWarnings("unchecked")
+			SchemaDefiner<T> schemaInitializer = registry.getService( SchemaDefiner.class );
+			@SuppressWarnings("unchecked")
+			DatastoreProvider<T> datastoreProvider = factory.getServiceRegistry().getService( DatastoreProvider.class );
 
 			DefaultSchemaInitializationContext context = new DefaultSchemaInitializationContext(
 					metadata.getDatabase(),
-					factory
+					factory,
+					options.shouldManageNamespaces()
 			);
 
 			schemaInitializer.validateMapping( context );
+
+			List<T> createCommands = schemaInitializer.getCreateCommands( context );
+			datastoreProvider.executeDdlCommands( createCommands );
+
 			schemaInitializer.initializeSchema( context );
 		}
 	}
 
-	private static class SchemaDropperImpl implements SchemaDropper {
+	private static class SchemaDropperImpl<T> implements SchemaDropper {
+
+		private final SessionFactoryImplementor factory;
+
+		public SchemaDropperImpl(SessionFactoryImplementor factory) {
+			this.factory = factory;
+		}
 
 		@Override
 		public void doDrop(Metadata metadata, ExecutionOptions options, SourceDescriptor sourceDescriptor, TargetDescriptor targetDescriptor) {
+			if ( sourceDescriptor.getSourceType() != SourceType.METADATA ) {
+				throw new UnsupportedOperationException( "Import scripts for schema creation are not supported at this point by Hibernate OGM" );
+			}
 
+			if ( targetDescriptor.getTargetTypes().contains( TargetType.SCRIPT ) ) {
+				throw new UnsupportedOperationException( "Only schema export to the datastore is supported at this point by Hibernate OGM" );
+			}
+
+			ServiceRegistryImplementor registry = factory.getServiceRegistry();
+
+			@SuppressWarnings("unchecked")
+			SchemaDefiner<T> schemaInitializer = registry.getService( SchemaDefiner.class );
+			@SuppressWarnings("unchecked")
+			DatastoreProvider<T> datastoreProvider = factory.getServiceRegistry().getService( DatastoreProvider.class );
+
+			DefaultSchemaInitializationContext context = new DefaultSchemaInitializationContext(
+					metadata.getDatabase(),
+					factory,
+					options.shouldManageNamespaces()
+			);
+
+			List<T> dropCommands = schemaInitializer.getDropCommands( context );
+
+			datastoreProvider.executeDdlCommands( dropCommands );
 		}
 
 		@Override
 		public DelayedDropAction buildDelayedAction(Metadata metadata, ExecutionOptions options, SourceDescriptor sourceDescriptor) {
-			return null;
+			if ( sourceDescriptor.getSourceType() != SourceType.METADATA ) {
+				throw new UnsupportedOperationException( "Import scripts for schema creation are not supported at this point by Hibernate OGM" );
+			}
+
+			ServiceRegistryImplementor registry = factory.getServiceRegistry();
+
+			@SuppressWarnings("unchecked")
+			SchemaDefiner<T> schemaInitializer = registry.getService( SchemaDefiner.class );
+
+			DefaultSchemaInitializationContext context = new DefaultSchemaInitializationContext(
+					metadata.getDatabase(),
+					factory,
+					options.shouldManageNamespaces()
+			);
+
+			final List<T> dropCommands = schemaInitializer.getDropCommands( context );
+
+			return new DelayedDropAction() {
+
+				@Override
+				public void perform(ServiceRegistry serviceRegistry) {
+					@SuppressWarnings("unchecked")
+					DatastoreProvider<T> datastoreProvider = serviceRegistry.getService( DatastoreProvider.class );
+					datastoreProvider.executeDdlCommands( dropCommands );
+				}
+			};
 		}
 	}
 }

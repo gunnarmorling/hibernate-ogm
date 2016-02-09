@@ -20,7 +20,6 @@ import org.hibernate.ogm.datastore.cassandra.impl.configuration.CassandraConfigu
 import org.hibernate.ogm.datastore.cassandra.logging.impl.Log;
 import org.hibernate.ogm.datastore.cassandra.logging.impl.LoggerFactory;
 import org.hibernate.ogm.datastore.spi.BaseDatastoreProvider;
-import org.hibernate.ogm.datastore.spi.SchemaDefiner;
 import org.hibernate.ogm.dialect.spi.GridDialect;
 import org.hibernate.ogm.options.spi.OptionsService;
 import org.hibernate.ogm.util.configurationreader.spi.ConfigurationPropertyReader;
@@ -40,7 +39,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
  *
  * @author Jonathan Halliday
  */
-public class CassandraDatastoreProvider extends BaseDatastoreProvider
+public class CassandraDatastoreProvider extends BaseDatastoreProvider<String>
 		implements Startable, Stoppable, ServiceRegistryAwareService, Configurable {
 
 	private static final Log log = LoggerFactory.getLogger();
@@ -62,7 +61,7 @@ public class CassandraDatastoreProvider extends BaseDatastoreProvider
 	}
 
 	@Override
-	public Class<? extends SchemaDefiner> getSchemaDefinerType() {
+	public Class<CassandraSchemaDefiner> getSchemaDefinerType() {
 		return CassandraSchemaDefiner.class;
 	}
 
@@ -147,12 +146,6 @@ public class CassandraDatastoreProvider extends BaseDatastoreProvider
 		sequenceHandler = null;
 	}
 
-	public void removeKeyspace() {
-		Session bootstrapSession = cluster.connect();
-		bootstrapSession.execute( "DROP KEYSPACE " + config.getDatabaseName() );
-		bootstrapSession.close();
-	}
-
 	public void createSecondaryIndexIfNeeded(String entityName, String columnName) {
 
 		// quoting index names: https://issues.apache.org/jira/browse/CASSANDRA-8393 (fixed in 2.1.3)
@@ -228,5 +221,13 @@ public class CassandraDatastoreProvider extends BaseDatastoreProvider
 	@Override
 	public boolean allowsTransactionEmulation() {
 		return true;
+	}
+
+	@Override
+	public void executeDdlCommands(Iterable<String> commands) {
+		for ( String command : commands ) {
+			System.out.println( "Executing CQL: " + command );
+			session.execute( command );
+		}
 	}
 }

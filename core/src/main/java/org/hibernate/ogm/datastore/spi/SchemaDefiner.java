@@ -6,6 +6,7 @@
  */
 package org.hibernate.ogm.datastore.spi;
 
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.model.relational.Database;
@@ -35,7 +36,7 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 	"The initializeSchema() method may be replaced by more specific fine-grained hooks in the future. A drop method " +
 	"will be added in the future."
 )
-public interface SchemaDefiner extends Service {
+public interface SchemaDefiner<T> extends Service {
 
 	/**
 	 * Validates the mapped objects such as entities, id generators etc. against any specific requirements of the
@@ -52,6 +53,10 @@ public interface SchemaDefiner extends Service {
 	 */
 	void initializeSchema(SchemaDefinitionContext context);
 
+	List<T> getCreateCommands(SchemaDefinitionContext context);
+
+	List<T> getDropCommands(SchemaDefinitionContext context);
+
 	/**
 	 * Provides contextual information about the schema objects to be created. Schema initialization should primarily be
 	 * driven via the objects retrievable via {@link Database} and the different types of meta-data.
@@ -65,5 +70,6 @@ public interface SchemaDefiner extends Service {
 		Set<AssociationKeyMetadata> getAllAssociationKeyMetadata();
 		Set<IdSourceKeyMetadata> getAllIdSourceKeyMetadata();
 		SessionFactoryImplementor getSessionFactory();
+		boolean createNamespace();
 	}
 }
